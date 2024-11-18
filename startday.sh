@@ -42,10 +42,8 @@ if ! grep -q advent Cargo.toml; then
   exit 1
 fi
 
-# If the "src" directory is empty, copy the template files from "day00/src" into the directory
-if [ ! "$(ls -A src)" ]; then
-  cp ../day00/src/* src/
-fi
+# copy the template files from "day00/src" into the directory
+cp ../day00/src/* src/
 
 # If the files/test directory does not exist or no files exist in that directory, create an empty test input file and default test answers
 if [ ! -d files ] || [ ! "$(ls -A files)" ]; then
