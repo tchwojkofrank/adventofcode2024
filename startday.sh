@@ -49,8 +49,8 @@ cp ../day00/src/* src/
 if [ ! -d files ] || [ ! "$(ls -A files)" ]; then
   mkdir files
   touch files/test
-  echo "1" > files/test_answer1
-  echo "2" > files/test_answer2
+  printf "1" > files/test_answer_1
+  printf "2" > files/test_answer_2
 fi
 
 # check that the project builds, and run the tests
