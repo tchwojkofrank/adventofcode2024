@@ -6,6 +6,9 @@ I'll document each day in a readme file, so don't go delving into the subdirecto
 ## A little Rust-y
 I'll be working in Rust this year. As usual, the code will be quick and dirty.
 
+## ChatGPT test
+After I complete a day, I'll also test ChatGPT a bit with the raw wording, and then my rewording, and see how it does.
+
 ## Setting up a day
 Run `./startday.sh xx` where `xx` is a day number to set up a directory for the day.
 That will set up the directory structure, run `cargo init`, copy the relevant bits from `day00`, and build and run tests to make sure it was set up correctly.

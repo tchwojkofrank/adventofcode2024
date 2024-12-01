@@ -13,3 +13,7 @@ Then M(i) = that count multiplied by the value N.
 Sum for all M(i).
 
 Minor hiccup when using hashmaps, and the value isn't found.
+
+## ChatGPT
+
+ChatGPT solved both parts of the problem without any issues.
