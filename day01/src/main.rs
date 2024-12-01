@@ -18,10 +18,58 @@ fn main() {
     println!("Part 2: {}", result2);
 }
 
-// turn off warning for unused variables
+fn split_line_into_pair(line: &String) -> (i32, i32) {
+    let mut pair = (0, 0);
+    // the line made of a number, followed by whitespace followed by a number
+    // split the line into a vector of strings, and transform the strings into integers    
+    let numbers: Vec<i32> = line.split_whitespace().map(|s| s.parse().unwrap()).collect();
+    // the first number is the first element of the vector
+    pair.0 = numbers[0];
+    // the second number is the second element of the vector
+    pair.1 = numbers[1];
+    pair
+}
+
+fn get_arrays(lines: &Vec<String>) -> (Vec<i32>, Vec<i32>) {
+    // create two arrays of integers, one for the first number in the line, and one for the second number in the line
+    let mut firsts = Vec::new();
+    let mut seconds = Vec::new();
+    // iterate over the lines
+    for line in lines {
+        // split the line into a pair of integers
+        let pair = split_line_into_pair(&line);
+        // add the first number to the firsts array
+        firsts.push(pair.0);
+        // add the second number to the seconds array
+        seconds.push(pair.1);
+    }
+    (firsts, seconds)
+}
+
+fn array_differences(firsts: &Vec<i32>, seconds: &Vec<i32>) -> Vec<i32> {
+    // get the absolute value of the differences of each pair of numbers between the two arrays
+    let mut differences = Vec::new();
+    for i in 0..firsts.len() {
+        differences.push((firsts[i] - seconds[i]).abs());
+    }
+    differences
+}
+
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let lines = advent::split_input_into_lines(&contents);
+    // create two arrays of integers, one for the first number in the line, and one for the second number in the line
+    let (firsts, seconds) = get_arrays(&lines);
+    // sort both arrays
+    let mut firsts = firsts;
+    firsts.sort();
+    let mut seconds = seconds;
+    seconds.sort();
+    // get the differences of each pair of numbers between the two arrays
+    let differences = array_differences(&firsts, &seconds);
+    // get the sum of the differences
+    let sum: i32 = differences.iter().sum();
+    sum.to_string()
 }
 
 #[allow(unused_variables)]
