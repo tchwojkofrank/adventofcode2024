@@ -9,7 +9,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/day01/target/debug/day01",
-            "args": ["day01/files/test2"],
+            "args": ["${workspaceFolder}/day01/files/test"],
             "cwd": "${workspaceFolder}",
             "stopOnEntry": false,
             "sourceLanguages": ["rust"]

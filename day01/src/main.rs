@@ -74,7 +74,25 @@ pub fn part1(contents: &String) -> String {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let lines = advent::split_input_into_lines(&contents);
+    // create two arrays of integers, one for the first number in the line, and one for the second number in the line
+    let (lefts, rights) = get_arrays(&lines);
+
+    // create a hashmap for the number of times each number appears in the right array
+    let mut right_map = std::collections::HashMap::new();
+    for right in rights {
+        let count = right_map.entry(right).or_insert(0);
+        *count += 1;
+    }
+
+    // for each number N in the left array, get the number of times it appears in the right array and multiply it by N, and sum the results
+    let mut sum = 0;
+    for left in lefts {
+        let count = right_map.get(&left).unwrap_or(&0);
+        sum += left * count;
+    }
+
+    sum.to_string()
 }
 
 #[cfg(test)]
