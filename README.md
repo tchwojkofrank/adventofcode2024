@@ -1,5 +1,8 @@
 # adventofcode2024
 
+## Spoiler warning
+I'll document each day in a readme file, so don't go delving into the subdirectories if you want to avoid spoilers.
+
 ## A little Rust-y
 I'll be working in Rust this year. As usual, the code will be quick and dirty.
 
