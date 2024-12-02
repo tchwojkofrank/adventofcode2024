@@ -22,14 +22,14 @@ fn main() {
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
     let reports = advent::split_input_into_lines(&contents);
-    let safe = count_safe_reports(&reports);
+    let safe = count_safe_reports(&reports, &is_safe_report);
     safe.to_string()
 }
 
-fn count_safe_reports(reports: &Vec<String>) -> i32 {
+fn count_safe_reports(reports: &Vec<String>, is_safe: &dyn Fn(&String) -> bool) -> i32 {
     let mut count = 0;
     for report in reports {
-        if is_safe_report(report) {
+        if is_safe(report) {
             count += 1;
         }
     }
@@ -71,9 +71,32 @@ fn is_safe_report(report: &String) -> bool {
     safe
 }
 
+fn is_safe_report_with_dampener(report: &String) -> bool {
+    // try removing each number once in the report. If any number is removed, the report is safe
+    let number_strings = advent::split_line_into_words(report);
+    let mut safe = false;
+    for i in 0..number_strings.len() {
+        // remove the number at index i and consider the report safe if the modified report is safe
+        let mut modified_report = String::new();
+        for j in 0..number_strings.len() {
+            if j != i {
+                modified_report.push_str(&number_strings[j]);
+                modified_report.push(' ');
+            }
+        }
+        if is_safe_report(&modified_report) {
+            safe = true;
+            break;
+        }
+    }
+    safe
+}
+
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let reports = advent::split_input_into_lines(&contents);
+    let safe = count_safe_reports(&reports, &is_safe_report_with_dampener);
+    safe.to_string()
 }
 
 #[cfg(test)]
