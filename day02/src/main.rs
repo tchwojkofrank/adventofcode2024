@@ -21,7 +21,54 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let reports = advent::split_input_into_lines(&contents);
+    let safe = count_safe_reports(&reports);
+    safe.to_string()
+}
+
+fn count_safe_reports(reports: &Vec<String>) -> i32 {
+    let mut count = 0;
+    for report in reports {
+        if is_safe_report(report) {
+            count += 1;
+        }
+    }
+    count
+}
+
+fn is_safe_report(report: &String) -> bool {
+    // each report is a set of numbers separated by whitespace
+    // split the report into a vector of strings
+    let number_strings = advent::split_line_into_words(report);
+    // convert the strings into integers
+    let numbers: Vec<i32> = number_strings.iter().map(|s| s.parse().unwrap()).collect();
+    // a report is safe if the numbers are either monotonically increasing or decreasing by between 1 and 3
+    let mut safe = true;
+    let mut sign = 0;
+    for i in 1..numbers.len() {
+        let diff = numbers[i] - numbers[i - 1];
+        if diff < 0 {
+            if sign > 0 {
+                safe = false;
+                break;
+            }
+            sign = -1;
+        } else if diff > 0 {
+            if sign < 0 {
+                safe = false;
+                break;
+            }
+            sign = 1;
+        } else {
+            safe = false;
+            break;
+        }
+        if diff.abs() < 1 || diff.abs() > 3 {
+            safe = false;
+            break;
+        }
+    }
+    safe
 }
 
 #[allow(unused_variables)]

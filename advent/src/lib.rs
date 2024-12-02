@@ -26,14 +26,14 @@ pub fn split_input_into_sections(input: &str) -> Vec<String> {
 }
 
 // Break up the input into lines
-pub fn split_input_into_lines(input: &str) -> Vec<String> {
+pub fn split_input_into_lines(input: &String) -> Vec<String> {
     input.lines()
         .map(|s| s.to_string())
         .collect()
 }
 
 // Break up a line into words
-pub fn split_line_into_words(line: &str) -> Vec<String> {
+pub fn split_line_into_words(line: &String) -> Vec<String> {
     line.split_whitespace()
         .map(|s| s.to_string())
         .collect()
