@@ -1,5 +1,7 @@
 // use the advent package
 use advent;
+use regex::Regex;
+
 fn main() {
     let args = advent::get_commandline_arguments();
     // the first argument is the input file name
@@ -21,7 +23,31 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let instruction_args = get_instruction_args(contents);
+    let result = get_instruction_value(&instruction_args);
+    result.to_string()
+}
+
+fn get_instruction_value(instruction_args: &Vec<(i32, i32)>) -> i32 {
+    let mut count = 0;
+    for (a, b) in instruction_args {
+        count += a * b;
+    }
+    count
+}
+
+fn get_instruction_args(contents: &String) -> Vec<(i32, i32)> {
+    // contents is a single string. We are looking for all instances of the following regex:
+    // mul(\\d+,\\d+)
+    // where \\d+ is one or more digits
+    // the regex is looking for the string "mul" followed by an open parenthesis, one or more digits, a comma, one or more digits, and a close parenthesis
+    let valid_instruction = Regex::new(r"mul\((\d+),(\d+)\)").unwrap();
+    // create a vector of pairs of integers
+    let mut instruction_args: Vec<(i32, i32)> = Vec::new();
+    for [arg1, arg2] in valid_instruction.captures_iter(contents).map(|cap| ([cap.get(1).unwrap().as_str(), cap.get(2).unwrap().as_str()])) {
+        instruction_args.push((arg1.parse().unwrap(), arg2.parse().unwrap()));
+    }
+    instruction_args
 }
 
 #[allow(unused_variables)]
