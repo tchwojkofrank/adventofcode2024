@@ -2,7 +2,7 @@
 
 ## Part 1
 
-Look for all the "mul(<A>,<B>)", and return the sum of all the A*B.
+Look for all the "mul(\<A\>,\<B\>)", and return the sum of all the A*B.
 
 Learned how to use the regex crate.
 
