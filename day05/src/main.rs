@@ -1,5 +1,7 @@
 // use the advent package
 use advent;
+use std::collections::HashMap;
+
 fn main() {
     let args = advent::get_commandline_arguments();
     // the first argument is the input file name
@@ -21,7 +23,60 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let sections = contents.split("\n\n").collect::<Vec<&str>>();
+    let rules = sections[0].lines().collect::<Vec<&str>>();
+    let page_update_lines = sections[1].lines().collect::<Vec<&str>>();
+    let rule_map = make_rule_map(&rules);
+    let page_updates = make_page_updates(&page_update_lines);
+    let result = process_page_updates(&rule_map, &page_updates);
+    result.to_string()
+}
+
+fn process_page_updates(rule_map: &HashMap<i32, Vec<i32>>, page_updates: &Vec<Vec<i32>>) -> i32 {
+    let mut result = 0;
+    for page_update in page_updates {
+        result += is_valid_update(&rule_map, &page_update);
+    }
+    result
+}
+
+fn is_valid_update(rule_map: &HashMap<i32, Vec<i32>>, page_update: &Vec<i32>) -> i32 {
+    // for each page in the update, check if all subsequent pages are in the rule_map for that page value
+    for i in 0..page_update.len() - 1 {
+        let page = page_update[i];
+        let next_page = page_update[i + 1];
+        if let Some(rule) = rule_map.get(&page) {
+            if !rule.contains(&next_page) {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    }
+    // if we got this far, then the update is valid, and we return the middle value of the page update
+    page_update[page_update.len() / 2]
+}
+
+fn make_rule_map(rules: &Vec<&str>) -> HashMap<i32, Vec<i32>> {
+    let mut rule_map: HashMap<i32, Vec<i32>> = HashMap::new();
+    for rule in rules {
+        // split the rule into parts and convert the parts to integers
+        let parts = rule.split("|").collect::<Vec<&str>>();
+        let key = parts[0].parse::<i32>().unwrap();
+        let value = parts[1].parse::<i32>().unwrap();
+        // add the value to the vector in the hashmap
+        rule_map.entry(key).or_insert(Vec::new()).push(value);
+    }
+    rule_map
+}
+
+fn make_page_updates(page_update_lines: &Vec<&str>) -> Vec<Vec<i32>> {
+    let mut page_updates: Vec<Vec<i32>> = Vec::new();
+    for line in page_update_lines {
+        let page_update: Vec<i32> = line.split(",").map(|x| x.parse::<i32>().unwrap()).collect();
+        page_updates.push(page_update);
+    }
+    page_updates
 }
 
 #[allow(unused_variables)]
