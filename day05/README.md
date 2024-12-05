@@ -14,6 +14,12 @@ Basically check that for each pair A,B, that there is a page ordering rule A|B.
 
 For the incorrectly ordered pages, create a custom ordering function using the rules, and then sort using that rule.
 
+## Other notes
+
+I didn't have to translate each page into a number. I should have left them all as strings, and then defined a custom ordering function, and just used sort.
+
+For part 1, I don't think I need to check every pair. If something was out of order, then one of the checks would fail.
+
 ## ChatGPT
 
 ChatGPT got both parts today.

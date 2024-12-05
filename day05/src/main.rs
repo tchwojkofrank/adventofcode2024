@@ -13,11 +13,19 @@ fn main() {
     // the contents of the file are ascii text. Read the contents of the file into a string
     let filename = &args[0];
     let contents = advent::read_file_to_string(filename);
-    // call part1 with the contents of the file
+
+    // Measure the time taken to execute part1 and part2
+    let start = std::time::Instant::now();
     let result1 = part1(&contents);
+    let duration1 = start.elapsed();
     println!("Part 1: {}", result1);
+    println!("Part 1 took: {:?}", duration1);
+
+    let start = std::time::Instant::now();
     let result2 = part2(&contents);
+    let duration2 = start.elapsed();
     println!("Part 2: {}", result2);
+    println!("Part 2 took: {:?}", duration2);
 }
 
 // turn off warning for unused variables
