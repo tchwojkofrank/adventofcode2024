@@ -81,8 +81,49 @@ fn make_page_updates(page_update_lines: &Vec<&str>) -> Vec<Vec<i32>> {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let sections = contents.split("\n\n").collect::<Vec<&str>>();
+    let rules = sections[0].lines().collect::<Vec<&str>>();
+    let page_update_lines = sections[1].lines().collect::<Vec<&str>>();
+    let rule_map = make_rule_map(&rules);
+    let page_updates = make_page_updates(&page_update_lines);
+    let result = process_invalid_page_updates(&rule_map, &page_updates);
+    result.to_string()
 }
+
+fn process_invalid_page_updates(rule_map: &HashMap<i32, Vec<i32>>, page_updates: &Vec<Vec<i32>>) -> i32 {
+    let mut result = 0;
+    for page_update in page_updates {
+        if is_valid_update(&rule_map, &page_update) == 0 {
+            let fixed_page_update = fix_page_update(&rule_map, &page_update);
+            result += fixed_page_update[fixed_page_update.len() / 2];
+        }
+    }
+    result
+}
+
+// create a type alias called Page for an integer (i32)
+type Page = i32;
+
+fn fix_page_update(rule_map: &HashMap<i32, Vec<i32>>, page_update: &Vec<i32>) -> Vec<Page> {
+    // create a Vector of Pages from the page_update
+    let mut pages: Vec<Page> = page_update.iter().map(|x| *x).collect();
+    // sort the pages using the rule_map to determine ordering
+    // Page A is less than Page B if Page B is in the rule_map for Page A
+    pages.sort_by(|a, b| {
+        if let Some(rule) = rule_map.get(a) {
+            if rule.contains(b) {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Greater
+            }
+        } else {
+            std::cmp::Ordering::Greater
+        }
+    });
+
+    pages
+}
+
 
 #[cfg(test)]
 mod tests {
