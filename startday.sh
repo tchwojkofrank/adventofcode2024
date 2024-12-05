@@ -44,11 +44,13 @@ fi
 
 # copy the template files from "day00/src" into the directory
 cp ../day00/src/* src/
+cp ../day00/README.md README.md
 
 # If the files/test directory does not exist or no files exist in that directory, create an empty test input file and default test answers
 if [ ! -d files ] || [ ! "$(ls -A files)" ]; then
   mkdir files
   touch files/test
+  touch files/input
   printf "1" > files/test_answer_1
   printf "2" > files/test_answer_2
 fi
