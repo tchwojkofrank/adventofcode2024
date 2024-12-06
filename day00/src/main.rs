@@ -17,12 +17,12 @@ fn main() {
     let start = Instant::now();
     let result1 = part1(&contents);
     let duration = start.elapsed();
-    println!("Part 1: {} (took {:?})", result1, duration);
+    println!("Part 1:\n{}\n\tTook {:?}", result1, duration);
 
     let start = Instant::now();
     let result2 = part2(&contents);
     let duration = start.elapsed();
-    println!("Part 2: {} (took {:?})", result2, duration);
+    println!("Part 2:\n{}\n\tTook {:?}", result2, duration);
 }
 
 // turn off warning for unused variables
