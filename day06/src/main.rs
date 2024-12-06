@@ -115,7 +115,58 @@ fn track_guard_path(grid: &mut Grid, guard_position: &Position, guard_direction:
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let mut result = 0;
+    let (grid, guard_position, guard_direction) = parse_input(contents);
+    // try adding an obstacle at each position on the grid that doesn't already have an obstacle
+    for y in 0..grid.len() {
+        println!("y = {}", y);
+        for x in 0..grid[y].len() {
+            if grid[y][x] == '.' {
+                let mut grid = grid.clone();
+                add_obstacle_at(&mut grid, &(x as i32, y as i32));
+                if has_loop(&grid, &guard_position, &guard_direction) {
+                    result += 1;
+                }
+            }
+        }
+    }
+    result.to_string()
+}
+
+fn add_obstacle_at(grid: &mut Grid, position: &Position) {
+    grid[position.1 as usize][position.0 as usize] = '#';
+}
+
+type GuardState = (Position, Direction);
+type GuardStateHashMap = std::collections::HashMap<GuardState, bool>;
+
+fn has_loop(grid: &Grid, guard_position: &Position, guard_direction: &Direction) -> bool {
+    let mut grid = grid.clone();
+    let mut guard_position = *guard_position;
+    let mut guard_direction = *guard_direction;
+    let mut done = false;
+    let mut new_position;
+    let mut guard_state_map = GuardStateHashMap::new();
+    guard_state_map.insert((guard_position, guard_direction), true);
+    grid[guard_position.1 as usize][guard_position.0 as usize] = 'X';
+    while !done {
+        (new_position, done) = move_guard(&grid, &guard_position, &guard_direction);
+        if !done {
+            if grid[new_position.1 as usize][new_position.0 as usize] == '#' {
+                guard_direction = turn_guard(&guard_direction);
+            } else {
+                guard_position = new_position;
+                // if grid[guard_position.1 as usize][guard_position.0 as usize] != 'X' {
+                //     grid[guard_position.1 as usize][guard_position.0 as usize] = 'X';
+                // }
+            }
+            if guard_state_map.contains_key(&(new_position, guard_direction)) {
+                return true;
+            }
+            guard_state_map.insert((new_position, guard_direction), true);
+        }
+    }
+    false
 }
 
 #[cfg(test)]
