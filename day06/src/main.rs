@@ -22,7 +22,7 @@ fn main() {
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
     let (mut grid, guard_position, guard_direction) = parse_input(contents);
-    let result = track_guard_path(&mut grid, &guard_position, &guard_direction);
+    let (result, _) = track_guard_path(&mut grid, &guard_position, &guard_direction);
     result.to_string()
 }
 
@@ -89,13 +89,15 @@ fn turn_guard(guard_direction: &Direction) -> Direction {
     }
 }
 
-fn track_guard_path(grid: &mut Grid, guard_position: &Position, guard_direction: &Direction) -> i32 {
+fn track_guard_path(grid: &mut Grid, guard_position: &Position, guard_direction: &Direction) -> (i32, Vec<Position>) {
     let mut guard_position = *guard_position;
     let mut guard_direction = *guard_direction;
     let mut count = 1;
     let mut done = false;
     let mut new_position;
+    let mut path = Vec::new();
     grid[guard_position.1 as usize][guard_position.0 as usize] = 'X';
+    path.push(guard_position);
     while !done {
         (new_position, done) = move_guard(grid, &guard_position, &guard_direction);
         if !done {
@@ -105,29 +107,26 @@ fn track_guard_path(grid: &mut Grid, guard_position: &Position, guard_direction:
                 guard_position = new_position;
                 if grid[guard_position.1 as usize][guard_position.0 as usize] != 'X' {
                     grid[guard_position.1 as usize][guard_position.0 as usize] = 'X';
+                    path.push(guard_position);
                     count += 1;
                 }
             }
         }
     }
-    count
+    (count, path)
 }
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
     let mut result = 0;
     let (grid, guard_position, guard_direction) = parse_input(contents);
+    let (_, path) = track_guard_path(&mut grid.clone(), &guard_position, &guard_direction);
     // try adding an obstacle at each position on the grid that doesn't already have an obstacle
-    for y in 0..grid.len() {
-        println!("y = {}", y);
-        for x in 0..grid[y].len() {
-            if grid[y][x] == '.' {
-                let mut grid = grid.clone();
-                add_obstacle_at(&mut grid, &(x as i32, y as i32));
-                if has_loop(&grid, &guard_position, &guard_direction) {
-                    result += 1;
-                }
-            }
+    for position in path {
+        let mut grid = grid.clone();
+        add_obstacle_at(&mut grid, &position);
+        if has_loop(&grid, &guard_position, &guard_direction) {
+            result += 1;
         }
     }
     result.to_string()
