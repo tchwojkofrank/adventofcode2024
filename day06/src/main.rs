@@ -1,5 +1,6 @@
 // use the advent package
 use advent;
+use std::time::Instant;
 fn main() {
     let args = advent::get_commandline_arguments();
     // the first argument is the input file name
@@ -12,10 +13,15 @@ fn main() {
     let filename = &args[0];
     let contents = advent::read_file_to_string(filename);
     // call part1 with the contents of the file
+    let start = Instant::now();
     let result1 = part1(&contents);
-    println!("Part 1: {}", result1);
+    let duration = start.elapsed();
+    println!("Part 1: {} (took {:?})", result1, duration);
+
+    let start = Instant::now();
     let result2 = part2(&contents);
-    println!("Part 2: {}", result2);
+    let duration = start.elapsed();
+    println!("Part 2: {} (took {:?})", result2, duration);
 }
 
 // turn off warning for unused variables
