@@ -28,7 +28,36 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let lines = contents.split("\n").collect::<Vec<&str>>();
+    let mut sum = 0;
+    for line in lines {
+        sum += test_line(line);
+    }
+    sum.to_string()
+}
+
+fn test_line(line: &str) -> i64 {
+    let parts = line.split(":").map(|x| x.trim()).collect::<Vec<&str>>();
+    let answer = parts[0].parse::<i64>().unwrap();
+    let operands = parts[1].split(" ").map(|x| x.parse::<i64>().unwrap()).collect();
+    if check_answer(answer, operands) {
+        return answer;
+    }
+    0
+}
+
+fn check_answer(answer: i64, operands: Vec<i64>) -> bool {
+    let length = operands.len();
+    if length == 1 {
+        return operands[0] == answer;
+    }
+    if check_answer(answer - operands[length-1], operands[0..length-1].to_vec()) {
+        return true;
+    }
+    if (answer % operands[length-1] == 0) && (check_answer(answer / operands[length-1], operands[0..length-1].to_vec())) {
+        return true;
+    }
+    false
 }
 
 #[allow(unused_variables)]
