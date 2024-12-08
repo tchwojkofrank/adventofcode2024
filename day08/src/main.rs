@@ -83,6 +83,50 @@ fn get_antinodes(grid: &Vec<Vec<char>>, node_map: &NodeMap) -> HashSet<Point> {
     antinodes
 }
 
+fn get_antinodes_with_harmonics(grid: &Vec<Vec<char>>, node_map: &NodeMap) -> HashSet<Point> {
+    let width = grid[0].len();
+    let height = grid.len();
+    let mut antinodes = HashSet::new();
+    for (_node, points) in node_map.iter() {
+        if points.len() < 2 {
+            continue;
+        }
+        for point1 in points {
+            for point2 in points {
+                if point1 == point2 {
+                    continue;
+                }
+                antinodes.insert(*point1);
+                antinodes.insert(*point2);
+                // get the direction from point1 to point2
+                let direction = (point2.0 - point1.0, point2.1 - point1.1);
+                // go further in that direction past point2
+                let mut current_point = *point2;
+                loop {
+                    let antinode = (current_point.0 + direction.0, current_point.1 + direction.1);
+                    // check if the antinode is in bounds
+                    if antinode.0 < 0 || antinode.0 >= width as i32 || antinode.1 < 0 || antinode.1 >= height as i32 {
+                        break;
+                    }
+                    current_point = antinode;
+                    antinodes.insert(antinode);
+                }
+                current_point = *point1;
+                loop {
+                    let antinode = (current_point.0 - direction.0, current_point.1 - direction.1);
+                    // check if the antinode is in bounds
+                    if antinode.0 < 0 || antinode.0 >= width as i32 || antinode.1 < 0 || antinode.1 >= height as i32 {
+                        break;
+                    }
+                    current_point = antinode;
+                    antinodes.insert(antinode);
+                }
+            }
+        }
+    }
+    antinodes
+}
+
 fn parse_input(contents: &String) -> (Vec<Vec<char>>, NodeMap) {
     let mut grid = Vec::new();
     let mut node_map: NodeMap = HashMap::new();
@@ -104,7 +148,12 @@ fn parse_input(contents: &String) -> (Vec<Vec<char>>, NodeMap) {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let (grid, node_map) = parse_input(contents);
+    let antinodes = get_antinodes_with_harmonics(&grid, &node_map);
+    print_antinodes_on_grid(&grid, &antinodes);
+    // get the count of antinodes
+    let result = antinodes.len();
+    result.to_string()
 }
 
 #[cfg(test)]
