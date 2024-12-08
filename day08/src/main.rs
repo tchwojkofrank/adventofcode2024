@@ -1,4 +1,5 @@
 use std::time::Instant;
+use std::collections::{HashMap, HashSet};
 
 // use the advent package
 use advent;
@@ -28,7 +29,77 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let (grid, node_map) = parse_input(contents);
+    let antinodes = get_antinodes(&grid, &node_map);
+    print_antinodes_on_grid(&grid, &antinodes);
+    // get the count of antinodes
+    let result = antinodes.len();
+    result.to_string()
+}
+
+type Point = (i32, i32);
+type NodeMap = HashMap<char, Vec<Point>>;
+
+fn print_antinodes_on_grid(grid: &Vec<Vec<char>>, antinodes: &HashSet<Point>) {
+    for (y, row) in grid.iter().enumerate() {
+        for (x, c) in row.iter().enumerate() {
+            let point = (x as i32, y as i32);
+            if antinodes.contains(&point) {
+                print!("#");
+            } else {
+                print!("{}", c);
+            }
+        }
+        println!();
+    }
+}
+
+fn get_antinodes(grid: &Vec<Vec<char>>, node_map: &NodeMap) -> HashSet<Point> {
+    let width = grid[0].len();
+    let height = grid.len();
+    let mut antinodes = HashSet::new();
+    for (_node, points) in node_map.iter() {
+        for point1 in points {
+            for point2 in points {
+                if point1 == point2 {
+                    continue;
+                }
+                // get the direction from point1 to point2
+                let direction = (point2.0 - point1.0, point2.1 - point1.1);
+                // go further in that direction past point2
+                let antinode1 = (point2.0 + direction.0, point2.1 + direction.1);
+                // go the negative direction past point1
+                let antinode2 = (point1.0 - direction.0, point1.1 - direction.1);
+                // check if the antinodes are in bounds
+                if antinode1.0 >= 0 && antinode1.0 < width as i32 && antinode1.1 >= 0 && antinode1.1 < height as i32 {
+                    antinodes.insert(antinode1);
+                }
+                if antinode2.0 >= 0 && antinode2.0 < width as i32 && antinode2.1 >= 0 && antinode2.1 < height as i32 {
+                    antinodes.insert(antinode2);
+                }
+            }
+        }
+    }
+    antinodes
+}
+
+fn parse_input(contents: &String) -> (Vec<Vec<char>>, NodeMap) {
+    let mut grid = Vec::new();
+    let mut node_map: NodeMap = HashMap::new();
+    for (y, line) in contents.lines().enumerate() {
+        for (x, c) in line.chars().enumerate() {
+            match c {
+                '.' => (),
+                _ => {
+                    // add the current point to the node map
+                    node_map.entry(c).or_insert(Vec::new()).push((x as i32, y as i32));
+                }
+            }
+        }
+        let row: Vec<char> = line.chars().collect();
+        grid.push(row);
+    }
+    (grid, node_map)
 }
 
 #[allow(unused_variables)]
