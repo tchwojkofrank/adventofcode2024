@@ -28,7 +28,80 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let (block_ids, block_counts, space_counts) = block_parser(contents);
+    let checksum = block_checksum(block_ids, &block_counts, &space_counts);
+    checksum.to_string()
+}
+
+// returns the following:
+// i32: number of block IDs.
+// Vec<i32>: the repeat count for each block ID.
+// Vec<i32>: the repeat count of space between each block ID.
+// The input string alternates between one digit block repeat counts and one digit space repeat counts.
+fn block_parser(block: &str) -> (i32, Vec<i32>, Vec<i32>) {
+    let mut block_ids = 0;
+    let mut block_counts = Vec::new();
+    let mut space_counts = Vec::new();
+    let mut block_count = true;
+    for c in block.chars() {
+        if block_count {
+            block_ids += 1;
+            block_counts.push(c.to_digit(10).unwrap() as i32);
+        } else {
+            space_counts.push(c.to_digit(10).unwrap() as i32);
+        }
+        block_count = !block_count;
+    }
+    (block_ids, block_counts, space_counts)
+}
+
+fn block_checksum(block_count: i32, block_counts: &Vec<i32>, space_counts: &Vec<i32>) -> u64 {
+    let (block_list_size, block_list) = get_block_list(block_count, block_counts, space_counts);
+    let mut checksum: u64 = 0;
+    let mut end = block_list_size - 1;
+    let mut compact_blocks = Vec::new();
+
+    for i in 0..block_list_size {
+        if i > end {
+            break;
+        }
+        if block_list[i as usize] >= 0 {
+            compact_blocks.push(block_list[i as usize]);
+            print!("{}", block_list[i as usize]);
+        } else {
+            while block_list[end as usize] < 0 && end > i {
+                end -= 1;
+            }
+            print!("{}", block_list[end as usize]);
+            compact_blocks.push(block_list[end as usize]);
+            end -= 1;
+        }
+    }
+    for (i,v) in compact_blocks.iter().enumerate() {
+        checksum += (*v as u64) * (i as u64);
+    }
+    println!();
+    checksum
+}
+
+fn get_block_list(block_count: i32, block_counts: &Vec<i32>, space_counts: &Vec<i32>) -> (i32, Vec<i32>) {
+    let mut block_list = Vec::new();
+    let mut index = 0;
+    for i in 0..block_count-1 {
+        for _ in 0..block_counts[i as usize] {
+            block_list.push(i);
+            index += 1;
+        }
+        for _ in 0..space_counts[i as usize] {
+            block_list.push(-1);
+            index += 1;
+        }
+    }
+    for _ in 0..block_counts[(block_count-1) as usize] {
+        block_list.push(block_count-1);
+        index += 1;
+    }
+    (index, block_list)
 }
 
 #[allow(unused_variables)]
