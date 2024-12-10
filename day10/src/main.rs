@@ -91,7 +91,18 @@ fn parse_input(contents: &String) -> Vec<Vec<i32>> {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let grid = parse_input(contents);
+    let mut count = 0;
+    for (y, row) in grid.iter().enumerate() {
+        for (x, cell) in row.iter().enumerate() {
+            if *cell == 0 {
+                let mut peaks = HashSet::new();
+                let start = Point{x: x as i32, y: y as i32};
+                count += good_trails_from_here(&grid, &start, -1, &mut peaks);
+            }
+        }
+    }
+    count.to_string()
 }
 
 #[cfg(test)]
