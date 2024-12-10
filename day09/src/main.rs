@@ -67,12 +67,12 @@ fn block_checksum(block_count: i32, block_counts: &Vec<i32>, space_counts: &Vec<
         }
         if block_list[i as usize] >= 0 {
             compact_blocks.push(block_list[i as usize]);
-            print!("{}", block_list[i as usize]);
+            // print!("{}", block_list[i as usize]);
         } else {
             while block_list[end as usize] < 0 && end > i {
                 end -= 1;
             }
-            print!("{}", block_list[end as usize]);
+            // print!("{}", block_list[end as usize]);
             compact_blocks.push(block_list[end as usize]);
             end -= 1;
         }
@@ -83,6 +83,65 @@ fn block_checksum(block_count: i32, block_counts: &Vec<i32>, space_counts: &Vec<
     println!();
     checksum
 }
+
+#[derive(Clone, Copy)]
+struct Block {
+    block_id: i32,
+    start: i32,
+    end: i32,
+    count: i32,
+}
+
+fn file_block_checksum(block_count: i32, block_counts: &Vec<i32>, space_counts: &Vec<i32>) -> u64 {
+    let (file_blocks, space_blocks) = get_file_block_list(block_count, block_counts, space_counts);
+    let mut checksum: u64 = 0;
+    let mut new_file_blocks = file_blocks.clone();
+    let mut space_blocks = space_blocks.clone();
+    for i in (0..file_blocks.len()).rev() {
+        let mut space_index = 0;
+        while space_index < space_blocks.len() && space_blocks[space_index].count < file_blocks[i].count {
+            space_index += 1;
+        }
+        if space_index < space_blocks.len() && space_blocks[space_index].start < file_blocks[i].start {
+            let mut new_file_block = file_blocks[i];
+            new_file_block.start = space_blocks[space_index].start;
+            new_file_block.end = new_file_block.start + new_file_block.count - 1;
+            space_blocks[space_index].start += new_file_block.count;
+            space_blocks[space_index].count -= new_file_block.count;
+            if space_blocks[space_index].count == 0 {
+                space_blocks.remove(space_index);
+            }
+            new_file_blocks[i] = new_file_block;
+        }
+    }
+    for b in new_file_blocks {
+        // get the sum of indexes from start to end
+        let start: u64 = b.start as u64;
+        let end: u64 = b.end as u64;
+        let sum = (start+end)*(end-start+1)/2;
+        checksum += (b.block_id as u64) * sum;
+    }
+    println!();
+    checksum
+}
+
+// returns the file blocks and space blocks
+fn get_file_block_list(block_count: i32, block_counts: &Vec<i32>, space_counts: &Vec<i32>) -> (Vec<Block>, Vec<Block>) {
+    let mut file_blocks = Vec::new();
+    let mut space_blocks = Vec::new();
+    let mut offset = 0;
+    let mut index = 0;
+    for i in 0..block_count-1 {
+        file_blocks.push(Block{block_id: index, start: offset, end: offset + block_counts[i as usize]-1, count: block_counts[i as usize]});
+        offset += block_counts[i as usize];
+        space_blocks.push(Block{block_id: index, start: offset, end: offset + space_counts[i as usize]-1, count: space_counts[i as usize]});
+        offset += space_counts[i as usize];
+        index += 1;
+    }
+    file_blocks.push(Block{block_id: index, start: offset, end: index + block_counts[(block_count-1) as usize]-1, count: block_counts[(block_count-1) as usize]});
+    (file_blocks, space_blocks)
+}
+
 
 fn get_block_list(block_count: i32, block_counts: &Vec<i32>, space_counts: &Vec<i32>) -> (i32, Vec<i32>) {
     let mut block_list = Vec::new();
@@ -106,7 +165,9 @@ fn get_block_list(block_count: i32, block_counts: &Vec<i32>, space_counts: &Vec<
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let (block_ids, block_counts, space_counts) = block_parser(contents);
+    let checksum = file_block_checksum(block_ids, &block_counts, &space_counts);
+    checksum.to_string()
 }
 
 #[cfg(test)]
