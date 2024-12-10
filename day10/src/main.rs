@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::HashSet, time::Instant};
 
 // use the advent package
 use advent;
@@ -28,7 +28,65 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let grid = parse_input(contents);
+    let mut count = 0;
+    for (y, row) in grid.iter().enumerate() {
+        for (x, cell) in row.iter().enumerate() {
+            if *cell == 0 {
+                let mut peaks = HashSet::new();
+                let start = Point{x: x as i32, y: y as i32};
+                _ = good_trails_from_here(&grid, &start, -1, &mut peaks);
+                count += peaks.len();
+            }
+        }
+    }
+    count.to_string()
+}
+#[derive(Eq, PartialEq, Hash)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn good_trails_from_here(grid: &Vec<Vec<i32>>, pos: &Point, prev: i32, peaks: &mut HashSet<Point>) -> i32 {
+    if pos.y < 0 || pos.y >= grid.len() as i32 || pos.x < 0 || pos.x >= grid[0].len() as i32 {
+        return 0;
+    }
+
+    if grid[pos.y as usize][pos.x as usize] != prev+1 {
+        return 0;
+    }
+
+    if grid[pos.y as usize][pos.x as usize] == 9 {
+        peaks.insert(Point{x: pos.x, y: pos.y});
+        return 1;
+    }
+
+    let mut count = 0;
+    // check all four directions
+    let north = Point{x: pos.x, y: pos.y-1};
+    let east: Point = Point{x: pos.x+1, y: pos.y};
+    let south: Point = Point{x: pos.x, y: pos.y+1};
+    let west: Point = Point{x: pos.x-1, y: pos.y};
+    count += good_trails_from_here(grid, &north, grid[pos.y as usize][pos.x as usize], peaks);
+    count += good_trails_from_here(grid, &east, grid[pos.y as usize][pos.x as usize], peaks);
+    count += good_trails_from_here(grid, &south, grid[pos.y as usize][pos.x as usize], peaks);
+    count += good_trails_from_here(grid, &west, grid[pos.y as usize][pos.x as usize], peaks);
+
+    count
+}
+
+fn parse_input(contents: &String) -> Vec<Vec<i32>> {
+    let mut result = Vec::new();
+    for line in contents.lines() {
+        let mut row = Vec::new();
+        for c in line.chars() {
+            // push the value of the character into the row
+            row.push(c as i32 - '0' as i32);
+        }
+        result.push(row);
+    }
+    result
 }
 
 #[allow(unused_variables)]
