@@ -28,7 +28,43 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let stones: Vec<&str> = contents.split_whitespace().collect();
+    let mut new_stones: Vec<String> = stones.iter().map(|&s| s.to_string()).collect();
+    // print_stones(&new_stones);
+    for _ in 0..25 {
+        new_stones = blink(new_stones);
+        // print_stones(&new_stones);
+    }
+    new_stones.len().to_string()
+}
+
+#[allow(dead_code)]
+fn print_stones(stones: &Vec<String>) {
+    for stone in stones.iter() {
+        print!("({}) ", stone);
+    }
+    println!();
+}
+
+fn blink(stones: Vec<String>) -> Vec<String> {
+    let mut new_stones: Vec<String> = Vec::new();
+    for stone in stones.iter() {
+        if *stone == "0" {
+            new_stones.push("1".to_string());
+        } else if stone.len() % 2 == 0 {
+            let split_stones = stone.split_at(stone.len()/2);
+            let v1 = split_stones.0.parse::<u64>().unwrap();
+            let v2 = split_stones.1.parse::<u64>().unwrap();
+            new_stones.push(v1.to_string());
+            new_stones.push(v2.to_string());
+        } else {
+            let stone_value = stone.parse::<u64>().unwrap();
+            let new_stone = (stone_value * (2024 as u64)).to_string();
+            new_stones.push(new_stone);
+        }
+    }
+
+    new_stones
 }
 
 #[allow(unused_variables)]
