@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
 // use the advent package
 use advent;
@@ -44,6 +44,7 @@ fn print_stones(stones: &Vec<String>) {
         print!("({}) ", stone);
     }
     println!();
+    println!();
 }
 
 fn blink(stones: Vec<String>) -> Vec<String> {
@@ -69,7 +70,52 @@ fn blink(stones: Vec<String>) -> Vec<String> {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let stones: Vec<&str> = contents.split_whitespace().collect();
+
+    let mut stone_count: StoneCount = HashMap::new();
+    for stone in stones.iter() {
+        let count = stone_count.entry(stone.to_string()).or_insert(0);
+        *count += 1;
+    }
+
+    // print_stones(&new_stones);
+    for _ in 0..75 {
+        stone_count = better_blink(&mut stone_count);
+        // print_stones(&new_stones);
+    }
+
+    let mut total: u64 = 0;
+    for (stone, count) in stone_count.iter() {
+        total += *count as u64;
+    }
+    total.to_string()
+
+}
+
+type StoneCount = HashMap<String, u64>;
+
+fn better_blink(stone_count: &StoneCount) -> StoneCount{
+    let mut new_stone_count: StoneCount = HashMap::new();
+    for (stone, count) in stone_count.iter() {
+        if *stone == "0" {
+            let new_count = new_stone_count.entry("1".to_string()).or_insert(0);
+            *new_count += *count;
+        } else if stone.len() % 2 == 0 {
+            let split_stones = stone.split_at(stone.len()/2);
+            let v1 = split_stones.0.parse::<u64>().unwrap();
+            let v2 = split_stones.1.parse::<u64>().unwrap();
+            let new_count1 = new_stone_count.entry(v1.to_string()).or_insert(0);
+            *new_count1 += *count;
+            let new_count2 = new_stone_count.entry(v2.to_string()).or_insert(0);
+            *new_count2 += *count;
+        } else {
+            let stone_value = stone.parse::<u64>().unwrap();
+            let new_stone = (stone_value * (2024 as u64)).to_string();
+            let new_count = new_stone_count.entry(new_stone).or_insert(0);
+            *new_count += *count;
+        }
+    }
+    new_stone_count
 }
 
 #[cfg(test)]
