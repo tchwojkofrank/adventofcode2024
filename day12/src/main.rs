@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::HashSet, time::Instant};
 
 // use the advent package
 use advent;
@@ -30,7 +30,7 @@ fn main() {
 pub fn part1(contents: &String) -> String {
     let garden = make_garden(contents);
     let mut cost = 0;
-    let mut visited = Vec::new();
+    let mut visited = HashSet::new();
     for y in 0..garden.len() {
         for x in 0..garden[y].len() {
             cost += region_cost(&garden, x, y, &mut visited);
@@ -39,7 +39,7 @@ pub fn part1(contents: &String) -> String {
     cost.to_string()
 }
 
-fn region_cost(garden: &Garden, x: usize, y: usize, visited: &mut Vec<(usize, usize)>) -> i32 {
+fn region_cost(garden: &Garden, x: usize, y: usize, visited: &mut HashSet<(usize, usize)>) -> i32 {
     if visited.contains(&(x, y)) {
         return 0;
     }
@@ -53,7 +53,7 @@ fn region_cost(garden: &Garden, x: usize, y: usize, visited: &mut Vec<(usize, us
             continue;
         }
         count += 1;
-        visited.push((x, y));
+        visited.insert((x, y));
         perimeter += 4-garden[y][x].neighbors;
         if x > 0 {
             if garden[y][x].plant == garden[y][x-1].plant {
@@ -76,7 +76,7 @@ fn region_cost(garden: &Garden, x: usize, y: usize, visited: &mut Vec<(usize, us
             }
         }
     }
-    println!("Region: {}, {}", garden[y][x].plant, count * perimeter);
+    // println!("Region: {}, {}", garden[y][x].plant, count * perimeter);
     count * perimeter
 }
 
@@ -123,7 +123,148 @@ fn check_neighbor(grid: &Garden, x: usize, y: usize, dx: i32, dy: i32) -> i32 {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let garden = make_garden(contents);
+    let mut cost = 0;
+    let mut visited = HashSet::new();
+    for y in 0..garden.len() {
+        for x in 0..garden[y].len() {
+            cost += discount_cost(&garden, x, y, &mut visited);
+        }
+    }
+    cost.to_string()
+}
+
+fn discount_cost(garden: &Garden, x: usize, y: usize, visited: &mut HashSet<(usize, usize)>) -> i32 {
+    if visited.contains(&(x, y)) {
+        return 0;
+    }
+    // let mut count = 0;
+    // let mut sides = 0;
+    let mut one_block = HashSet::new();
+    let mut stack = Vec::new();
+    let (mut minx, mut miny, mut maxx, mut maxy) = (x, y, x, y);
+
+    one_block.insert((x, y));
+    stack.push((x, y));
+    while stack.len() > 0 {
+        let (x, y) = stack.pop().unwrap();
+        if visited.contains(&(x, y)) {
+            continue;
+        }
+        // count += 1;
+        visited.insert((x, y));
+        one_block.insert((x, y));
+        minx = minx.min(x);
+        miny = miny.min(y);
+        maxx = maxx.max(x);
+        maxy = maxy.max(y);
+        if x > 0 {
+            if garden[y][x].plant == garden[y][x-1].plant && !visited.contains(&(x-1, y)) {
+                stack.push((x - 1, y));
+            }
+        }
+        if x < garden[0].len() - 1 {
+            if garden[y][x].plant == garden[y][x+1].plant && !visited.contains(&(x+1, y)) {
+                stack.push((x + 1, y));
+            }
+        }
+        if y > 0 {
+            if garden[y][x].plant == garden[y-1][x].plant && !visited.contains(&(x, y-1)) {
+                stack.push((x, y - 1));
+            }
+        }
+        if y < garden.len() - 1 {
+            if garden[y][x].plant == garden[y+1][x].plant && !visited.contains(&(x, y+1)) {
+                stack.push((x, y + 1));
+            }
+        }
+    }
+
+    let (count, sides) = find_sides(&garden, minx, miny, maxx, maxy, &one_block);
+    
+    count * sides
+}
+
+fn find_sides(garden: &Garden, minx: usize, miny: usize, maxx: usize, maxy: usize, one_block: &HashSet<(usize, usize)>) -> (i32, i32) {
+    let mut sides = 0;
+    let count = one_block.len() as i32;
+
+    // top sides
+    for y in miny..=maxy {
+        let mut x = minx;
+        while x <= maxx {
+            if one_block.contains(&(x, y)) && has_border(&garden, x as i32, y as i32, 0, -1) {
+                sides += 1;
+                x += 1;
+                while x <= maxx && one_block.contains(&(x, y)) && has_border(&garden, x as i32, y as i32, 0, -1) {
+                    x += 1;
+                }
+            } else {
+                x += 1;
+            }
+        }
+    }
+
+    // bottom sides
+    for y in miny..=maxy {
+        let mut x = minx;
+        while x <= maxx {
+            if one_block.contains(&(x, y)) && has_border(&garden, x as i32, y as i32, 0, 1) {
+                sides += 1;
+                x += 1;
+                while x <= maxx && one_block.contains(&(x, y)) && has_border(&garden, x as i32, y as i32, 0, 1) {
+                    x += 1;
+                }
+            } else {
+                x += 1;
+            }
+        }
+    }
+
+    // left sides
+    for x in minx..=maxx {
+        let mut y = miny;
+        while y<= maxy {
+            if one_block.contains(&(x, y)) && has_border(&garden, x as i32, y as i32, -1, 0) {
+                sides += 1;
+                y += 1;
+                while y <= maxy && one_block.contains(&(x, y)) && has_border(&garden, x as i32, y as i32, -1, 0) {
+                    y += 1;
+                }
+            } else {
+                y += 1;
+            }
+        }
+    }
+
+    // right sides
+    for x in minx..=maxx {
+        let mut y = miny;
+        while y <= maxy {
+            if one_block.contains(&(x, y)) && has_border(&garden, x as i32, y as i32, 1, 0) {
+                sides += 1;
+                y += 1;
+                while y <= maxy && one_block.contains(&(x, y)) && has_border(&garden, x as i32, y as i32, 1, 0) {
+                    y += 1;
+                }
+            } else {
+                y += 1;
+            }
+        }
+    }
+
+    (count, sides)
+}
+
+fn has_border(grid: &Garden, x: i32, y: i32, dx: i32, dy: i32) -> bool {
+    let nx = x + dx;
+    let ny = y + dy;
+    if nx < 0 || ny < 0 || nx >= grid[0].len() as i32 || ny >= grid.len() as i32 {
+        return true;
+    }
+    let p1 = grid[ny as usize][nx as usize].plant;
+    let p2 = grid[y as usize][x as usize].plant;
+    p1 != p2
 }
 
 #[cfg(test)]
