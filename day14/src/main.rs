@@ -100,7 +100,42 @@ fn line_to_robot(line: &str) -> Robot {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String,space: Point2D<i32>) -> String {
-    2.to_string()
+    let mut robots = contents_to_robots(contents);
+    for i in 0..10000000 {
+        for robot in robots.iter_mut() {
+            let delta = robot.v;
+            robot.p = robot.p.add(delta);
+            if robot.p.x < 0 {
+                robot.p.x += space.x*(robot.p.x.abs()/space.x+1);
+            }
+            if robot.p.y < 0 {
+                robot.p.y += space.y*(robot.p.y.abs()/space.y+1);
+            }
+            robot.p.x %= space.x;
+            robot.p.y %= space.y;
+        }
+        if i % 101 == 37{
+            println!("{}", i);
+            print_robots(&robots, space);
+            println!();    
+            // wait for user input
+            // let mut input = String::new();
+            // std::io::stdin().read_line(&mut input).unwrap();
+            // wait for 0.1s
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+    }
+    1.to_string()
+}
+
+fn print_robots(robots: &Vec<Robot>, space: Point2D<i32>) {
+    let mut grid = vec![vec!['.'; space.x as usize]; space.y as usize];
+    for robot in robots.iter() {
+        grid[robot.p.y as usize][robot.p.x as usize] = '#';
+    }
+    for row in grid.iter() {
+        println!("{}", row.iter().collect::<String>());
+    }
 }
 
 #[cfg(test)]
