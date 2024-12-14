@@ -353,6 +353,12 @@ impl<T> Point2D<T> {
     {
         Point2D::new(self.x.clone() - other.x.clone(), self.y.clone() - other.y.clone())
     }
+    pub fn scale(&self, scalar: T) -> Point2D<T>
+    where
+        T: std::ops::Mul<Output = T> + std::clone::Clone,
+    {
+        Point2D::new(self.x.clone() * scalar.clone(), self.y.clone() * scalar.clone())
+    }
     // manhattan distance
     pub fn manhattan_distance(&self, other: Point2D<T>) -> T
     where
