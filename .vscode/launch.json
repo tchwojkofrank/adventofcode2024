@@ -8,8 +8,8 @@
             "name": "Debug Rust",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/day12/target/debug/day12",
-            "args": ["${workspaceFolder}/day12/files/test"],
+            "program": "${workspaceFolder}/day13/target/debug/day13",
+            "args": ["${workspaceFolder}/day13/files/test"],
             "cwd": "${workspaceFolder}",
             "stopOnEntry": false,
             "sourceLanguages": ["rust"]
