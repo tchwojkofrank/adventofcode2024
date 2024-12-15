@@ -340,41 +340,43 @@ impl<T> Point2D<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
-    // implement add and subtract for points
-    pub fn add(&self, other: Point2D<T>) -> Point2D<T>
+
+    pub fn add(&self, other: &Point2D<T>) -> Point2D<T>
     where
-        T: std::ops::Add<Output = T> + std::clone::Clone,
+        T: std::ops::Add<Output = T> + Copy,
     {
-        Point2D::new(self.x.clone() + other.x.clone(), self.y.clone() + other.y.clone())
+        Point2D::new(self.x + other.x, self.y + other.y)
     }
-    pub fn subtract(&self, other: Point2D<T>) -> Point2D<T>
+
+    pub fn subtract(&self, other: &Point2D<T>) -> Point2D<T>
     where
-        T: std::ops::Sub<Output = T> + std::clone::Clone,
+        T: std::ops::Sub<Output = T> + Copy,
     {
-        Point2D::new(self.x.clone() - other.x.clone(), self.y.clone() - other.y.clone())
+        Point2D::new(self.x - other.x, self.y - other.y)
     }
+
     pub fn scale(&self, scalar: T) -> Point2D<T>
     where
-        T: std::ops::Mul<Output = T> + std::clone::Clone,
+        T: std::ops::Mul<Output = T> + Copy,
     {
-        Point2D::new(self.x.clone() * scalar.clone(), self.y.clone() * scalar.clone())
+        Point2D::new(self.x * scalar, self.y * scalar)
     }
-    // manhattan distance
-    pub fn manhattan_distance(&self, other: Point2D<T>) -> T
+
+    pub fn manhattan_distance(&self, other: &Point2D<T>) -> T
     where
-        T: std::ops::Add<Output = T> + std::ops::Sub<Output = T> + std::cmp::PartialOrd + std::clone::Clone + Signed,
+        T: std::ops::Add<Output = T> + std::ops::Sub<Output = T> + Copy + Signed,
     {
-        (self.x.clone() - other.x.clone()).abs() + (self.y.clone() - other.y.clone()).abs()
+        (self.x - other.x).abs() + (self.y - other.y).abs()
     }
-    // euclidean distance
-    pub fn euclidean_distance(&self, other: Point2D<T>) -> f64
+
+    pub fn euclidean_distance(&self, other: &Point2D<T>) -> f64
     where
-        T: std::ops::Add<Output = T> + std::ops::Sub<Output = T> + std::clone::Clone,
+        T: std::ops::Add<Output = T> + std::ops::Sub<Output = T> + Copy,
         f64: std::convert::From<T>,
     {
-        let dx = f64::from(self.x.clone() - other.x.clone());
-        let dy = f64::from(self.y.clone() - other.y.clone());
-        (dx*dx + dy*dy).sqrt()
+        let dx = f64::from(self.x - other.x);
+        let dy = f64::from(self.y - other.y);
+        (dx * dx + dy * dy).sqrt()
     }
 }
 
@@ -520,7 +522,7 @@ mod tests {
     fn test_point2d_add() {
         let a = Point2D::new(1, 2);
         let b = Point2D::new(3, 4);
-        let c = a.add(b);
+        let c = a.add(&b);
         assert_eq!(c, Point2D::new(4, 6));
     }
 
@@ -528,7 +530,7 @@ mod tests {
     fn test_point2d_subtract() {
         let a = Point2D::new(1, 2);
         let b = Point2D::new(3, 4);
-        let c = a.subtract(b);
+        let c = a.subtract(&b);
         assert_eq!(c, Point2D::new(-2, -2));
     }
 
@@ -536,7 +538,7 @@ mod tests {
     fn test_point2d_manhattan_distance() {
         let a = Point2D::new(1, 2);
         let b = Point2D::new(3, 4);
-        let c = a.manhattan_distance(b);
+        let c = a.manhattan_distance(&b);
         assert_eq!(c, 4);
     }
 
@@ -544,7 +546,7 @@ mod tests {
     fn test_point2d_euclidean_distance() {
         let a = Point2D::new(1, 2);
         let b = Point2D::new(3, 4);
-        let c = a.euclidean_distance(b);
+        let c = a.euclidean_distance(&b);
         assert_eq!(c, 2.8284271247461903);
     }
 }
