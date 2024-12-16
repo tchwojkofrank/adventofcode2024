@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 advent = { path = "../advent" }
+lazy_static = "1.5.0"
