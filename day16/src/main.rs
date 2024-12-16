@@ -39,7 +39,7 @@ pub fn part1(contents: &String) -> String {
     let end_pos = map.2;
     let start_node = Node { pos: start_pos, direction: 1 };
     let end_node = Node { pos: end_pos, direction: 4 };
-    let path = advent::a_star(start_node, end_node, get_neighbors, get_cost, heuristic);
+    let path = advent::shortest_path(start_node, end_node, get_neighbors, get_cost, heuristic);
     if path.is_none() {
         return "No path found".to_string();
     // } else {

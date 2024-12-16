@@ -88,11 +88,11 @@ where
     // create a hash set to store the nodes that have been visited
     let mut visited = std::collections::HashSet::new();
     // insert the start node into the queue with a distance of zero
-    queue.push(PriorityNode { priority: 0, node: start.clone() });
+    queue.push(Reverse(PriorityNode { priority: 0, node: start.clone() }));
     // set the distance to the start node to zero
     distance.insert(start.clone(), 0);
     // while the queue is not empty
-    while let Some(PriorityNode { priority: dist, node }) = queue.pop() {
+    while let Some(Reverse(PriorityNode { priority: dist, node })) = queue.pop() {
         // if the node is the goal node
         if node == goal {
             // create a vector to store the path
@@ -130,7 +130,7 @@ where
                 // insert the new distance into the distance hash map
                 distance.insert(neighbor.clone(), new_distance);
                 // insert the neighbor into the queue with the new distance
-                queue.push(PriorityNode { priority: new_distance + get_heuristic(&neighbor, &goal), node: neighbor.clone() });
+                queue.push(Reverse(PriorityNode { priority: new_distance + get_heuristic(&neighbor, &goal), node: neighbor.clone() }));
                 // insert the node into the previous hash map
                 previous.insert(neighbor.clone(), node.clone());
             }
