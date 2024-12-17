@@ -140,6 +140,70 @@ where
     None
 }
 
+pub fn all_shortest_paths<Node, NeighborFn, DistanceFn, HeuristicFn>(start: Node, goal: Node, get_neighbors: NeighborFn, get_distance: DistanceFn, get_heuristic: HeuristicFn) -> Option<HashMap<Node,Vec<Node>>>
+where
+    Node: std::cmp::Eq + std::hash::Hash + std::clone::Clone,
+    NeighborFn: Fn(&Node) -> Vec<Node>,
+    DistanceFn: Fn(&Node, &Node) -> u64,
+    HeuristicFn: Fn(&Node, &Node) -> u64,
+{
+    // create a priority queue
+    let mut queue = std::collections::BinaryHeap::new();
+    // create a hash map to store the distance to each node
+    let mut distance = std::collections::HashMap::new();
+    // create a hash map to store the previous node in the path
+    let mut previous: HashMap<Node,Vec<Node>> = std::collections::HashMap::new();
+    // create a hash set to store the nodes that have been visited
+    let mut visited = std::collections::HashSet::new();
+    // insert the start node into the queue with a distance of zero
+    queue.push(Reverse(PriorityNode { priority: 0, node: start.clone() }));
+    // set the distance to the start node to zero
+    distance.insert(start.clone(), 0);
+    let mut found_path = false;
+    // while the queue is not empty
+    while let Some(Reverse(PriorityNode { priority: dist, node })) = queue.pop() {
+        // if the node is the goal node
+        if node == goal {
+            found_path = true;
+        }
+        // if the node has been visited
+        if visited.contains(&node) {
+            // skip the rest of the loop
+            continue;
+        }
+        // insert the node into the visited set
+        visited.insert(node.clone());
+        // for each neighbor of the node
+        for neighbor
+        in get_neighbors(&node) {
+            // calculate the new distance to the neighbor
+            let new_distance = dist + get_distance(&node, &neighbor);
+            // if the neighbor has not been visited or the new distance is less than the current distance
+            if !visited.contains(&neighbor) || new_distance <= *distance.get(&neighbor).unwrap_or(&u64::MAX) {
+                // insert the new distance into the distance hash map
+                distance.insert(neighbor.clone(), new_distance);
+                // insert the neighbor into the queue with the new distance
+                queue.push(Reverse(PriorityNode { priority: new_distance + get_heuristic(&neighbor, &goal), node: neighbor.clone() }));
+                // insert the node into the previous hash map
+                if previous.contains_key(&neighbor) {
+                    let mut path = previous.get(&neighbor).unwrap().clone();
+                    path.push(node.clone());
+                    previous.insert(neighbor.clone(), path);
+                } else {
+                    let mut path = Vec::new();
+                    path.push(node.clone());
+                    previous.insert(neighbor.clone(), path);
+                }
+            }
+        }
+    }
+    if found_path {
+        return Some(previous);
+    }
+    // return None if no path is found
+    None
+}
+
 // cursor positioning for the terminal
 macro_rules! POS {
     () => { "\x1B[{};{}H" };

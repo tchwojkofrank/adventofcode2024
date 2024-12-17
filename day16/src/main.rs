@@ -1,7 +1,7 @@
 
 // use the advent package
 use advent;
-use std::{sync::Mutex, time::Instant};
+use std::{collections::{HashMap, HashSet}, sync::Mutex, time::Instant};
 
 fn main() {
     let args = advent::get_commandline_arguments();
@@ -42,11 +42,6 @@ pub fn part1(contents: &String) -> String {
     let path = advent::shortest_path(start_node, end_node, get_neighbors, get_cost, heuristic);
     if path.is_none() {
         return "No path found".to_string();
-    // } else {
-    //     // print the path
-    //     for node in path.as_ref().unwrap() {
-    //         println!("{:?}   ", node);
-    //     }
     }
     let path_cost = calculate_path_cost(&path.unwrap());
     path_cost.to_string()
@@ -155,8 +150,64 @@ fn make_map(contents: &String) -> (Vec<Vec<char>>, (i32, i32), (i32, i32)) {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let map = make_map(contents);
+    // assign map to the global variable MAP
+    let mut m = MAP.lock().unwrap();
+    *m = Some(map.clone());
+    // unlock MAP
+    drop(m);
+    let start_pos = map.1;
+    let end_pos = map.2;
+    let start_node = Node { pos: start_pos, direction: 1 };
+    let end_node = Node { pos: end_pos, direction: 4 };
+    let paths = advent::all_shortest_paths(start_node, end_node, get_neighbors, get_cost, heuristic);
+    if paths.is_none() {
+        return "No path found".to_string();
+    }
+    let visited = walk_paths(paths.unwrap());
+    visited.len().to_string()
 }
+
+fn walk_paths(paths: HashMap<Node,Vec<Node>>) -> HashSet<(i32,i32)> {
+    let mut visited = HashSet::new();
+    let mut visited_stack = HashSet::new();
+    // start at the end node from the map, and walk backwards on all paths in the HashMap that lead back to the start.
+    // add each node to the visited HashSet
+    // return the HashSet
+    // get the global MAP
+    let m = MAP.lock().unwrap();
+    let map = m.as_ref().unwrap();
+    let end = Node { pos: map.2, direction: 4 };
+    let start = Node { pos: map.1, direction: 1 };
+    let mut result_map = map.0.clone();
+    // unlock MAP
+    drop(m);
+    // walk the paths backwards starting from the end node
+    let mut stack = vec![end];
+    while stack.len() > 0 {
+        let node = stack.pop().unwrap();
+        if visited_stack.contains(&node) {
+            continue;
+        }
+        visited.insert(node.pos.clone());
+        visited_stack.insert(node.clone());
+        result_map[node.pos.1 as usize][node.pos.0 as usize] = 'O';
+        if node.pos == start.pos {
+            continue;
+        }
+        let neighbors = paths.get(&node).unwrap();
+        for neighbor in neighbors {
+            stack.push(neighbor.clone());
+        }
+    }
+    // print the map
+    for row in result_map {
+        let s: String = row.iter().collect();
+        println!("{}", s);
+    }
+    visited
+}
+
 
 #[cfg(test)]
 mod tests {
