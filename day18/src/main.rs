@@ -126,7 +126,29 @@ fn get_coordinates(secton: &String,count:i32) -> HashSet<(i32,i32)> {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let sections: Vec<&str> = contents.split("\n\n").collect();
+    let bounds: Vec<&str> = sections[0].split(",").collect();
+    let mut min = 0;
+    let mut max = sections[1].lines().count()-1;
+    let mut count = (max+min)/2;
+    while max -  min > 1 {
+        let mut map = MAP.lock().unwrap();
+        map.width = bounds[0].parse::<i32>().unwrap();
+        map.height = bounds[1].parse::<i32>().unwrap();
+        map.map = get_coordinates(&(sections[1].to_string()),(count+1) as i32);
+        let start = Node{p: (0, 0)};
+        let goal = Node{p: (map.width-1, map.height-1)};
+        drop(map);
+        let path = advent::shortest_path(start, goal, get_neighbors, get_distance, get_heuristic);
+        if path.is_none() {
+            max = count;
+        } else {
+            min = count;
+        }
+        count = (min + max) / 2;
+    }
+    let lines = sections[1].lines().collect::<Vec<&str>>();
+    lines[max].to_string()
 }
 
 #[cfg(test)]
