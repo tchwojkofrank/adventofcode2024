@@ -17,7 +17,9 @@ fn main() {
     let start = Instant::now();
     let result1 = part1(&contents);
     let duration = start.elapsed();
-    println!("Part 1:\n{}\n\tTook {:?}", result1, duration);
+    println!("Part 1:\n{}\n\tTook {:?}\n", result1, duration);
+
+    // println!("Experimenting:\n{}\n", experiment(&contents));
 
     let start = Instant::now();
     let result2 = part2(&contents);
@@ -163,6 +165,7 @@ impl Machine {
         }
         (ok, ok_prefix)
     }
+
 }
 
 // turn off warning for unused variables
@@ -173,45 +176,47 @@ pub fn part1(contents: &String) -> String {
     machine.output.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(",")
 }
 
+pub fn experiment(contents: &String) -> String {
+    let mut machine = make_machine(contents);
+    machine.Run();
+    let machine_output = machine.output.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(",");
+    machine_output
+}
+
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    let mut result = "0".to_string();
-    let mut result_value = 0 as u64;
-    let original_machine = make_machine(contents);
-    let mut ok = (false,false);
-    let mut longest_output = String::new();
-    let mut best_suffix = "".to_string();
-    let mut answer = 0;
-    while !ok.0 {
-        // println!("Trying {}", result);
-        let mut machine = original_machine.clone();
-        machine.check = true;
-        machine.a = u64::from_str_radix(&(result.clone() + &best_suffix), 2).unwrap();
-        answer = machine.a;
-        println!("Trying {}. Longest match {}", machine.a, longest_output);
-        ok = machine.Run();
-        let mut machine_output = machine.output.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(",");
-        // machine_output may have 0 to n commas. Trim everything after the last comma
-        machine_output = machine_output.rsplit_once(',').map_or(machine_output.clone(), |(prefix, _)| prefix.to_string());
-        let mut reset_result = false;
-        if machine_output.len() > longest_output.len() && ok.1 {
-            // trim everything after the last comma
-            longest_output = machine_output.clone();
-            best_suffix = result.clone() + &best_suffix;
-            println!("{}: {}", best_suffix, longest_output);
-            reset_result = true;
-        }
-        if !ok.0 {
-            if reset_result {
-                result_value = 0;
-            } else {
-                result_value += 1;
+    let machine = make_machine(contents);
+    let prefix = 0 as u64;
+    let (_,a) = test_target(&machine, machine.program.len()-1, prefix);
+    a.to_string()
+}
+
+fn test_target(machine: &Machine, target_index: usize, prefix: u64) -> (bool, u64) {
+    for suffix in 0..7 as u64 {
+        let mut test_machine = machine.clone();
+        test_machine.a = prefix | suffix;
+        test_machine.Run();
+        if test_machine.output.len() == machine.program.len()-target_index {
+            let mut ok = true;
+            for i in 0..machine.program.len()-target_index {
+                if test_machine.output[i] != machine.program[target_index+i] {
+                    ok = false;
+                    break;
+                }
             }
-            result = format!("{:b}", result_value);
+            if ok {
+                if target_index == 0 {
+                    return (ok, prefix | suffix);
+                } else {
+                    let (ok, a) = test_target(&test_machine, target_index-1, prefix | suffix << 3);
+                    if ok {
+                        return (ok, a);
+                    }
+                }
+            }
         }
     }
-
-    answer.to_string()
+    (false, 0)
 }
 
 #[cfg(test)]
