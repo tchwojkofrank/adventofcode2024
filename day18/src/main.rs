@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::HashSet, time::Instant, sync::{LazyLock, Mutex}};
 
 // use the advent package
 use advent;
@@ -25,10 +25,103 @@ fn main() {
     println!("Part 2:\n{}\n\tTook {:?}", result2, duration);
 }
 
+struct Map {
+    map: HashSet<(i32, i32)>,
+    width: i32,
+    height: i32,
+}
+
+static MAP: LazyLock<Mutex<Map>> = LazyLock::new(|| Mutex::new(Map {
+    map: HashSet::new(),
+    width: 0,
+    height: 0,
+}));
+
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let sections: Vec<&str> = contents.split("\n\n").collect();
+    let bounds: Vec<&str> = sections[0].split(",").collect();
+    let mut map = MAP.lock().unwrap();
+    map.width = bounds[0].parse::<i32>().unwrap();
+    map.height = bounds[1].parse::<i32>().unwrap();
+    map.map = get_coordinates(&(sections[1].to_string()),1024);
+    let start = Node{p: (0, 0)};
+    let goal = Node{p: (map.width-1, map.height-1)};
+    drop(map);
+    let path = advent::shortest_path(start, goal, get_neighbors, get_distance, get_heuristic);
+    // print path
+    if path.is_none() {
+        return "No path found".to_string();
+    }
+    let path = path.unwrap();
+    for node in path.iter() {
+        println!("{:?}", node.p);
+    }
+    (path.len()-1).to_string()
+}
+#[derive(Clone,Eq,PartialEq,Hash,Debug)]
+struct Node {
+    p: (i32, i32)
+}
+
+fn get_heuristic(start: &Node, end: &Node) -> u64 {
+    get_distance(start, end)
+}
+
+fn get_distance(node1: &Node, node2: &Node) -> u64 {
+    let x1 = node1.p.0;
+    let y1 = node1.p.1;
+    let x2 = node2.p.0;
+    let y2 = node2.p.1;
+    ((x1-x2).abs() + (y1-y2).abs()) as u64
+}
+
+fn get_neighbors(node: &Node) -> Vec<Node> {
+    let mut neighbors = Vec::new();
+    let map = MAP.lock().unwrap();
+    let x = node.p.0;
+    let y = node.p.1;
+    if x > 0 {
+        if !map.map.contains(&(x-1, y)) {
+            neighbors.push(Node{p:(x-1, y)});
+        }
+    }
+    if x < map.width-1 {
+        if !map.map.contains(&(x+1, y)) {
+            neighbors.push(Node{p:(x+1, y)});
+        }
+    }
+    if y > 0 {
+        if !map.map.contains(&(x, y-1)) {
+            neighbors.push(Node{p:(x, y-1)});
+        }
+    }
+    if y < map.height-1 {
+        if !map.map.contains(&(x, y+1)) {
+            neighbors.push(Node{p: (x, y+1)});
+        }
+    }
+    drop(map);
+    neighbors
+}
+
+fn get_coordinates(secton: &String,count:i32) -> HashSet<(i32,i32)> {
+    let mut coordinates = HashSet::new();
+    let lines = secton.split("\n");
+    let mut c = 0;
+    for line in lines {
+        // parse the string n,n into two integers
+        let parts: Vec<&str> = line.split(",").collect();
+        let x = parts[0].parse::<i32>().unwrap();
+        let y = parts[1].parse::<i32>().unwrap();
+        coordinates.insert((x,y));
+        c += 1;
+        if c == count {
+            break;
+        }
+    }
+    coordinates
 }
 
 #[allow(unused_variables)]
