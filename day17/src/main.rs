@@ -192,26 +192,34 @@ pub fn part2(contents: &String) -> String {
 }
 
 fn test_target(machine: &Machine, target_index: usize, prefix: u64) -> (bool, u64) {
-    for suffix in 0..7 as u64 {
+    for suffix in 0..512 as u64 {
         let mut test_machine = machine.clone();
         test_machine.a = prefix | suffix;
+        println!("Testing: {:b} = {}", test_machine.a, test_machine.a);
         test_machine.Run();
-        if test_machine.output.len() == machine.program.len()-target_index {
-            let mut ok = true;
-            for i in 0..machine.program.len()-target_index {
-                if test_machine.output[i] != machine.program[target_index+i] {
+        let mut ok = true;
+        let check_length = machine.program.len()-target_index;
+        let program_start = machine.program.len()-check_length;
+        if test_machine.output.len() < check_length {
+            ok = false;
+        } else {
+            let output_start = test_machine.output.len()-check_length;
+            for i in 0..check_length {
+                let program_index = program_start+i;
+                let output_index = output_start+i;
+                if test_machine.output[output_index] != machine.program[program_index] {
                     ok = false;
                     break;
                 }
-            }
-            if ok {
-                if target_index == 0 {
-                    return (ok, prefix | suffix);
-                } else {
-                    let (ok, a) = test_target(&test_machine, target_index-1, prefix | suffix << 3);
-                    if ok {
-                        return (ok, a);
-                    }
+            }    
+        }
+        if ok {
+            if target_index == 0 {
+                return (ok, prefix | suffix);
+            } else {
+                let (ok, a) = test_target(&test_machine, target_index-1, (prefix | suffix) << 9);
+                if ok {
+                    return (ok, a);
                 }
             }
         }
