@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 use regex;
 
 // use the advent package
@@ -54,7 +54,39 @@ fn is_design_possible(towels: &str, design: &str) -> bool {
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let sections: Vec<&str> = contents.split("\n\n").collect();
+    let towels = sections[0];
+    let designs = sections[1].split("\n").collect::<Vec<&str>>();
+    let mut count = 0 as u64;
+    let towel_array: Vec<&str> = towels.split(", ").collect();
+    let towel_slice = &towel_array[..];
+    let mut solution_map: HashMap<String,u64> = std::collections::HashMap::new();
+    for design in designs {
+        if is_design_possible(towels, design) {
+            count += possible_solutions(towel_slice, design, &mut solution_map);
+        }
+        // println!("Design: {} Count: {}", design, count);
+    }
+    count.to_string()
+}
+
+fn possible_solutions(towels: &[&str], design: &str, solution_map: &mut HashMap<String, u64>) -> u64 {
+    let mut solutions = 0;
+    if solution_map.contains_key(design) {
+        return solution_map[design];
+    }
+    for towel in towels {
+        if design.starts_with(towel) {
+            let remaining = &design[towel.len()..];
+            if remaining.len() == 0 {
+                solutions += 1;
+            } else {
+                solutions += possible_solutions(towels, remaining, solution_map);
+            }
+        }
+    }
+    solution_map.insert(design.to_string(), solutions);
+    solutions
 }
 
 #[cfg(test)]
