@@ -1,4 +1,5 @@
 use std::time::Instant;
+use regex;
 
 // use the advent package
 use advent;
@@ -28,7 +29,27 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let sections: Vec<&str> = contents.split("\n\n").collect();
+    let towels = sections[0];
+    let designs = sections[1].split("\n").collect::<Vec<&str>>();
+    let mut count = 0;
+    for design in designs {
+        if is_design_possible(towels, design) {
+            count += 1;
+        }
+    }
+    count.to_string()
+}
+
+fn is_design_possible(towels: &str, design: &str) -> bool {
+    let mut towel_regex = towels.to_string().replace(", ","|");
+    towel_regex = "^(".to_string() + &towel_regex + ")+$";
+    let re = regex::Regex::new(&towel_regex).unwrap();
+    // let a_match = re.find(design);
+    // if a_match.is_some() {
+    //     println!("{} is possible for {}", a_match.unwrap().as_str(), design);
+    // }
+    re.is_match(design)
 }
 
 #[allow(unused_variables)]
