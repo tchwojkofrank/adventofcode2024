@@ -29,12 +29,12 @@ fn main() {
 
 #[derive(Clone)]
 struct Machine {
-    a: u64,
-    b: u64,
-    c: u64,
-    program: Vec<u64>,
+    a: u128,
+    b: u128,
+    c: u128,
+    program: Vec<u128>,
     op: usize,
-    output: Vec<u64>,
+    output: Vec<u128>,
     check: bool,
 }
 
@@ -44,11 +44,11 @@ fn make_machine(contents: &String) -> Machine {
     // strip off the prefix of "Register A: " what's left is the value of register A
     let lines = sections[0].lines().collect::<Vec<&str>>();
     let machine = Machine {
-        a: lines[0].strip_prefix("Register A: ").unwrap().parse::<u64>().unwrap(),
-        b: lines[1].strip_prefix("Register B: ").unwrap().parse::<u64>().unwrap(),
-        c: lines[2].strip_prefix("Register C: ").unwrap().parse::<u64>().unwrap(),
+        a: lines[0].strip_prefix("Register A: ").unwrap().parse::<u128>().unwrap(),
+        b: lines[1].strip_prefix("Register B: ").unwrap().parse::<u128>().unwrap(),
+        c: lines[2].strip_prefix("Register C: ").unwrap().parse::<u128>().unwrap(),
         // program is a comma separated list of numbers
-        program: program.split(",").map(|x| x.parse::<u64>().unwrap()).collect::<Vec<u64>>(),
+        program: program.split(",").map(|x| x.parse::<u128>().unwrap()).collect::<Vec<u128>>(),
         op: 0,
         check: false,
         output: Vec::new(),
@@ -117,7 +117,7 @@ impl Machine {
     }
 
     #[allow(non_snake_case)]
-    fn Op(&self) -> u64{
+    fn Op(&self) -> u128{
         let value = self.program[self.op+1];
         if value <= 3 {
             return value;
@@ -186,20 +186,40 @@ pub fn experiment(contents: &String) -> String {
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
     let machine = make_machine(contents);
-    let prefix = 0 as u64;
+    let prefix = 0 as u128;
     let (_,a) = test_target(&machine, machine.program.len()-1, prefix);
     a.to_string()
 }
 
-fn test_target(machine: &Machine, target_index: usize, prefix: u64) -> (bool, u64) {
-    for suffix in 0..512 as u64 {
+fn bit_length(x: u128) -> u32 {
+    let mut length = 0;
+    let mut value = x;
+    while value > 0 {
+        value >>= 1;
+        length += 1;
+    }
+    if length == 0 {
+        return 1;
+    }
+    length
+}
+
+fn test_target(machine: &Machine, target_index: usize, prefix: u128) -> (bool, u128) {
+    let mut suffix = 0;
+    loop {
+        if bit_length(suffix) > 9 {
+            return (false, 0);
+        }
         let mut test_machine = machine.clone();
-        test_machine.a = prefix | suffix;
+        let check_length = machine.program.len()-target_index;
+        let program_start = machine.program.len()-check_length;
+        test_machine.a = (prefix << bit_length(suffix)) | suffix;
+        if bit_length(test_machine.a) > 3* (machine.program.len() as u32)+9 || bit_length(test_machine.a) > (check_length as u32)*3+9 {
+            return (false, 0);
+        }
         println!("Testing: {:b} = {}", test_machine.a, test_machine.a);
         test_machine.Run();
         let mut ok = true;
-        let check_length = machine.program.len()-target_index;
-        let program_start = machine.program.len()-check_length;
         if test_machine.output.len() < check_length {
             ok = false;
         } else {
@@ -215,16 +235,16 @@ fn test_target(machine: &Machine, target_index: usize, prefix: u64) -> (bool, u6
         }
         if ok {
             if target_index == 0 {
-                return (ok, prefix | suffix);
+                return (ok, (prefix << bit_length(suffix)) | suffix);
             } else {
-                let (ok, a) = test_target(&test_machine, target_index-1, (prefix | suffix) << 9);
+                let (ok, a) = test_target(machine, target_index-1, (prefix << bit_length(suffix)) | suffix);
                 if ok {
                     return (ok, a);
                 }
             }
         }
+        suffix += 1;
     }
-    (false, 0)
 }
 
 #[cfg(test)]
