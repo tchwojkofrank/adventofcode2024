@@ -186,8 +186,7 @@ pub fn experiment(contents: &String) -> String {
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
     let machine = make_machine(contents);
-    let prefix = 0 as u128;
-    let (_,a) = test_target(&machine, machine.program.len()-1, prefix);
+    let (_,a) = test_target2(&machine, 0, 0);
     a.to_string()
 }
 
@@ -202,6 +201,46 @@ fn bit_length(x: u128) -> u32 {
         return 1;
     }
     length
+}
+
+fn test_target2(machine: &Machine, target_index: usize, prefix: u128) -> (bool, u128) {
+    let mut suffix = 0;
+    loop {
+        if bit_length(suffix) > 9 {
+            return (false, 0);
+        }
+        let mut test_machine = machine.clone();
+        let check_length = target_index+1;
+        let program_start = 0;
+        test_machine.a = (prefix << bit_length(suffix)) | suffix;
+        println!("Testing: {:b} = {}", test_machine.a, test_machine.a);
+        if bit_length(test_machine.a) > 3* (machine.program.len() as u32)+6 || bit_length(test_machine.a) > (check_length as u32)*3+6 {
+            return (false, 0);
+        }
+        test_machine.Run();
+        let mut ok = true;
+        if test_machine.output.len() < check_length || test_machine.output.len() > machine.program.len() {
+            ok = false;
+        } else {
+            for i in 0..check_length {
+                if test_machine.output[i] != machine.program[i] {
+                    ok = false;
+                    break;
+                }
+            }    
+        }
+        if ok {
+            if target_index == 0 && test_machine.output.len() == machine.program.len() {
+                return (ok, (prefix << bit_length(suffix)) | suffix);
+            } else {
+                let (ok, a) = test_target2(machine, target_index+1, (prefix << bit_length(suffix)) | suffix);
+                if ok {
+                    return (ok, a);
+                }
+            }
+        }
+        suffix += 1;
+    }
 }
 
 fn test_target(machine: &Machine, target_index: usize, prefix: u128) -> (bool, u128) {
@@ -220,7 +259,7 @@ fn test_target(machine: &Machine, target_index: usize, prefix: u128) -> (bool, u
         println!("Testing: {:b} = {}", test_machine.a, test_machine.a);
         test_machine.Run();
         let mut ok = true;
-        if test_machine.output.len() < check_length {
+        if test_machine.output.len() < check_length || test_machine.output.len() > machine.program.len() {
             ok = false;
         } else {
             let output_start = test_machine.output.len()-check_length;
@@ -234,7 +273,7 @@ fn test_target(machine: &Machine, target_index: usize, prefix: u128) -> (bool, u
             }    
         }
         if ok {
-            if target_index == 0 {
+            if target_index == 0 && test_machine.output.len() == machine.program.len() {
                 return (ok, (prefix << bit_length(suffix)) | suffix);
             } else {
                 let (ok, a) = test_target(machine, target_index-1, (prefix << bit_length(suffix)) | suffix);
