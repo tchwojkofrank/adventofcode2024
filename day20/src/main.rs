@@ -1,7 +1,8 @@
-use std::time::Instant;
+use std::{collections::HashMap, sync::{LazyLock, Mutex}, time::Instant};
 
 // use the advent package
 use advent;
+
 fn main() {
     let args = advent::get_commandline_arguments();
     // the first argument is the input file name
@@ -25,10 +26,151 @@ fn main() {
     println!("Part 2:\n{}\n\tTook {:?}", result2, duration);
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+struct Node {
+    x: i32,
+    y: i32,
+}
+
+struct Map {
+    map: HashMap<(i32, i32),char>,
+    start: (i32,i32),
+    end: (i32,i32),
+    width: i32,
+    height: i32,
+}
+
+static MAP: LazyLock<Mutex<Map>> = LazyLock::new(|| Mutex::new(Map {
+    map: HashMap::new(),
+    start: (0,0),
+    end: (0,0),
+    width: 0,
+    height: 0,
+}));
+
+
+fn get_neighbors(node: &Node) -> Vec<Node> {
+    // get the global map
+    let m = MAP.lock().unwrap();
+    let mut neighbors = Vec::new();
+    let mut x = node.x+1;
+    let mut y = node.y;
+    if x < m.width-1 {
+        let grid_value = m.map.get(&(x,y)).unwrap_or(&'.');
+        if *grid_value != '#'{
+            neighbors.push(Node{x: x, y:y});
+        }
+    }
+    x = node.x-1;
+    if x > 0 {
+        let grid_value = m.map.get(&(x,y)).unwrap_or(&'.');
+        if *grid_value != '#'{
+            neighbors.push(Node{x: x, y:y,});
+        }
+    }
+    x = node.x;
+    y = node.y+1;
+    if y < m.height-1 {
+        let grid_value = m.map.get(&(x,y)).unwrap_or(&'.');
+        if *grid_value != '#'{
+            neighbors.push(Node{x: x, y:y});
+        }
+    }
+    y = node.y-1;
+    if y > 0 {
+        let grid_value = m.map.get(&(x,y)).unwrap_or(&'.');
+        if *grid_value != '#'{
+            neighbors.push(Node{x: x, y:y});
+        }
+    }
+    drop(m);
+    neighbors
+}
+
+fn get_heuristic(_start: &Node, _end: &Node) -> u64 {
+    0
+}
+
+fn get_distance(_node1: &Node, _node2: &Node) -> u64 {
+    1
+}
+
+fn make_map(contents: &String) {
+    let mut m = MAP.lock().unwrap();
+    let mut x;
+    let mut y = 0;
+    let lines = contents.split("\n").collect::<Vec<&str>>();
+    m.width = lines.len() as i32;
+    m.height = lines[0].len() as i32;
+    for line in lines {
+        x = 0;
+        for c in line.chars() {
+            if c == '#' {
+                m.map.insert((x,y), c);
+            }
+            if c == 'S' {
+                m.start = (x,y);
+            }
+            if c == 'E' {
+                m.end = (x,y);
+            }
+            x += 1;
+        }
+        y += 1;
+    }
+    drop(m);
+}
+
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    make_map(contents);
+    // get the shortest path without cheating (by setting the cheated flag to true)
+    let m = MAP.lock().unwrap();
+    let start = Node{x: m.start.0, y: m.start.1};
+    let end = Node{x: m.end.0, y: m.end.1};
+    drop(m);
+    let best = advent::shortest_path(start, end , get_neighbors, get_distance, get_heuristic);
+    if best.is_none() {
+        return "No path found".to_string();
+    }
+    let best = best.unwrap();
+    let best_distance = best.len()-1;
+    let mut path_index: HashMap<(i32,i32),i32> = HashMap::new();
+    for (i,node) in best.iter().enumerate() {
+        path_index.insert((node.x,node.y), i as i32);
+    }
+    let mut cheats: HashMap<(i32,i32),i32> = HashMap::new();
+    let m = MAP.lock().unwrap();
+    for (i,node) in best.iter().enumerate() {
+        // check each direction for a possible cheat by going through a wall
+        let x = node.x;
+        let y = node.y;
+        let directions = vec![(0,1),(0,-1),(1,0),(-1,0)];
+        for (dx,dy) in directions {
+            let x1 = x+dx;
+            let y1 = y+dy;
+            let x2 = x+2*dx;
+            let y2 = y+2*dy;
+            // make sure the next position is a wall, and the position after that is not a wall
+            if m.map.get(&(x1,y1)).unwrap_or(&'.') == &'#' && m.map.get(&(x2,y2)).unwrap_or(&'.') != &'#' {
+                if path_index.get(&(x2,y2)).is_some() {
+                    let pi1 = path_index.get(&(x,y)).unwrap();
+                    let pi2 = path_index.get(&(x2,y2)).unwrap();
+                    if (pi2-pi1-2) > 100 {
+                        println!("Cheat at ({},{}) saves {} steps", x1, y1, pi2-pi1-2);
+                    }
+                    if pi1 - pi2 > 100 {
+                        cheats.insert((x1,y1), pi2-pi1-2);
+                    }
+                }
+            }
+        }
+    }
+    drop(m);
+
+    // count how many cheats save more than 100 steps
+    cheats.len().to_string()
 }
 
 #[allow(unused_variables)]
