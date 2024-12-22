@@ -28,11 +28,63 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let lines = contents.split("\n").collect::<Vec<&str>>();
+    let secrets = lines.iter().map(|line| line.parse::<u128>().unwrap()).collect::<Vec<u128>>();
+    let mut secrets2k = Vec::new();
+    let mut sum = 0;
+    for secret in secrets.iter() {
+        let x = *secret;
+        let mut y = x;
+        for _ in 0..2000 {
+            y = next(y);
+        }
+        secrets2k.push(y);
+        sum += y;
+        println!("{}: {}", x, y);
+    }
+    sum.to_string()
+}
+
+fn next(secret: u128) -> u128 {
+    step3(step2(step1(secret)))
+}
+
+fn step1(secret: u128) -> u128 {
+    prune(mix(secret, secret << 6))
+}
+
+fn step2(secret: u128) -> u128 {
+    prune(mix(secret, secret >> 5))
+}
+
+fn step3(secret: u128) -> u128 {
+    prune(mix(secret, secret*2048))
+}
+
+fn mix(secret: u128, x: u128) -> u128 {
+    x ^ secret
+}
+
+fn prune(x: u128) -> u128 {
+    x & 0xffffff
 }
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
+    let lines = contents.split("\n").collect::<Vec<&str>>();
+    let secrets = lines.iter().map(|line| line.parse::<u128>().unwrap()).collect::<Vec<u128>>();
+    let mut secrets2klist: Vec<Vec<u128>> = Vec::new();
+    for secret in secrets.iter() {
+        let mut secrets2k = Vec::new();
+        let x = *secret;
+        secrets2k.push(x);
+        let mut y = x;
+        for _ in 0..2000 {
+            y = next(y%10);
+            secrets2k.push(y);
+        }
+        secrets2klist.push(secrets2k);
+    }
     2.to_string()
 }
 
