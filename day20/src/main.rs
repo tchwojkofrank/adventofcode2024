@@ -160,9 +160,6 @@ pub fn part1(contents: &String) -> String {
                 if path_index.get(&(x2,y2)).is_some() {
                     let pi1 = path_index.get(&(x,y)).unwrap();
                     let pi2 = path_index.get(&(x2,y2)).unwrap();
-                    // if (pi2-pi1-2) > 100 {
-                    //     println!("Cheat at ({},{}) saves {} steps", x1, y1, pi2-pi1-2);
-                    // }
                     if pi1 - pi2 > 100 {
                         cheats.insert((x1,y1), pi2-pi1-2);
                     }
@@ -225,7 +222,6 @@ pub fn part2(contents: &String) -> String {
                         continue;
                     }
                     if (pi2-pi1-manhattan) >= 100 {
-                        println!("Cheat at ({},{}) saves {} steps", x1, y1, pi2-pi1-manhattan);
                         let cheat_saving = pi2-pi1-manhattan;
                         let count = cheat_counts.entry(cheat_saving).or_insert(0);
                         *count += 1;
@@ -238,10 +234,8 @@ pub fn part2(contents: &String) -> String {
         }
     }
 
-    // print all the cheat counts
     let mut cc_sum = 0;
     for (k,v) in cheat_counts.iter() {
-        println!("There are {} cheats that save {} picoseconds.", v, k);
         if *k >= 100 {
             cc_sum += *v;
         }
