@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::{HashMap, HashSet}, time::Instant};
 
 // use the advent package
 use advent;
@@ -73,20 +73,90 @@ fn prune(x: u128) -> u128 {
 pub fn part2(contents: &String) -> String {
     let lines = contents.split("\n").collect::<Vec<&str>>();
     let secrets = lines.iter().map(|line| line.parse::<u128>().unwrap()).collect::<Vec<u128>>();
-    let mut secrets2klist: Vec<Vec<u128>> = Vec::new();
+    let mut secrets2klist: Vec<Vec<i32>> = Vec::new();
     for secret in secrets.iter() {
         let mut secrets2k = Vec::new();
-        let x = *secret;
-        secrets2k.push(x);
-        let mut y = x;
+        let mut y = *secret;
         for _ in 0..2000 {
-            y = next(y%10);
-            secrets2k.push(y);
+            y = next(y);
+            secrets2k.push((y%10) as i32);
         }
         secrets2klist.push(secrets2k);
     }
-    2.to_string()
+    let diff_codes_list = get_diff_codes(&secrets2klist);
+    let (highest_value_diff_code, highest_value) = get_highest_value_diff_code(&diff_codes_list);
+    println!("Highest Value Diff Code: {:?} {}", highest_value_diff_code, highest_value);
+    highest_value.to_string()
 }
+
+// create a type that is an array of four i32 values
+type DiffCode = [i32; 4];
+// struct DiffCodeEntry {
+//     dc: DiffCode,
+//     price: i32,
+// }
+
+// a monkey has a Vector of 2000 secrets.
+// the diference between four consectutive secrets is a DiffCode
+// the price is the entry in the last secret of that set of four for the first encounter of that sequence
+// get a HashMap of DiffCodeEntry from a vector of 2000 secrets
+fn get_diff_codes_for_monkey(secrets: &Vec<i32>) -> HashMap<DiffCode, i32> {
+    let mut diff_codes: HashMap<DiffCode, i32> = HashMap::new();
+    for i in 0..1996 {
+        let dc: DiffCode = [secrets[i+1] as i32 - secrets[i] as i32, secrets[i+2] as i32 - secrets[i+1] as i32, secrets[i+3] as i32 - secrets[i+2] as i32, secrets[i+4] as i32 - secrets[i+3] as i32];
+        if !diff_codes.contains_key(&dc) {
+            diff_codes.insert(dc, secrets[i+4]);
+        }
+    }
+    diff_codes
+}
+
+// get the diff_codes for all the monkeys
+fn get_diff_codes(secrets2klist: &Vec<Vec<i32>>) -> Vec<HashMap<DiffCode, i32>> {
+    let mut diff_codes_list: Vec<HashMap<DiffCode, i32>> = Vec::new();
+    for secrets2k in secrets2klist.iter() {
+        diff_codes_list.push(get_diff_codes_for_monkey(secrets2k));
+    }
+    diff_codes_list
+}
+
+// the value of a diff code is the sum of the prices over each monkey's diff code price
+fn get_diff_code_value(diff_codes_list: &Vec<HashMap<DiffCode, i32>>, diff_code: DiffCode) -> i32 {
+    let mut sum = 0;
+    for diff_codes in diff_codes_list.iter() {
+        if let Some(price) = diff_codes.get(&diff_code) {
+            sum += price;
+        }
+    }
+    sum
+}
+
+// get a list of all the diff_codes over all the monkeys
+fn get_all_diff_codes(diff_codes_list: &Vec<HashMap<DiffCode, i32>>) -> HashSet<DiffCode> {
+    let mut all_diff_codes: HashSet<DiffCode> = HashSet::new();
+    for diff_codes in diff_codes_list.iter() {
+        for (dc, _) in diff_codes.iter() {
+            all_diff_codes.insert(*dc);
+        }
+    }
+    all_diff_codes
+}
+
+// get the diff code with the highest value
+fn get_highest_value_diff_code(diff_codes_list: &Vec<HashMap<DiffCode, i32>>) -> (DiffCode, i32) {
+    let all_diff_codes = get_all_diff_codes(diff_codes_list);
+    let mut highest_value = 0;
+    let mut highest_value_diff_code = [0, 0, 0, 0];
+    for diff_code in all_diff_codes.iter() {
+        let value = get_diff_code_value(diff_codes_list, *diff_code);
+        if value > highest_value {
+            highest_value = value;
+            highest_value_diff_code = *diff_code;
+        }
+    }
+    (highest_value_diff_code, highest_value)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -107,11 +177,11 @@ mod tests {
     #[test]
     fn test2() {
         // get the contents of the file "files/test"
-        let contents = advent::read_file_to_string("files/test");
+        let contents = advent::read_file_to_string("files/test2");
         // call part2 with the contents of the file
         let result = part2(&contents);
         // get the contents of the file "files/test_answer_2"
-        let answer = advent::read_file_to_string("files/test_answer_2");
+        let answer = advent::read_file_to_string("files/test2_answer_2");
         // compare the result with the answer
         assert_eq!(result, answer);
     }
