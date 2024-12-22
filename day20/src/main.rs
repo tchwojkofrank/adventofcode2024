@@ -160,9 +160,9 @@ pub fn part1(contents: &String) -> String {
                 if path_index.get(&(x2,y2)).is_some() {
                     let pi1 = path_index.get(&(x,y)).unwrap();
                     let pi2 = path_index.get(&(x2,y2)).unwrap();
-                    if (pi2-pi1-2) > 100 {
-                        println!("Cheat at ({},{}) saves {} steps", x1, y1, pi2-pi1-2);
-                    }
+                    // if (pi2-pi1-2) > 100 {
+                    //     println!("Cheat at ({},{}) saves {} steps", x1, y1, pi2-pi1-2);
+                    // }
                     if pi1 - pi2 > 100 {
                         cheats.insert((x1,y1), pi2-pi1-2);
                     }
@@ -194,7 +194,7 @@ pub fn part2(contents: &String) -> String {
         path_index.insert((node.x,node.y), i as i32);
     }
     let mut cheats: HashMap<(i32,i32),i32> = HashMap::new();
-    let cheat_counts: HashMap<i32,i32> = HashMap::new();
+    let mut cheat_counts: HashMap<i32,i32> = HashMap::new();
 
     let m = MAP.lock().unwrap();
     let width = m.width;
@@ -203,7 +203,7 @@ pub fn part2(contents: &String) -> String {
 
     // start at the beginning of the path, and look at all grid points at most 20 manhattan distance away
     for (i,node) in best.iter().enumerate() {
-        println!("Checking node {} of {}", i, best.len());  
+        // println!("Checking node {} of {}", i, best.len());  
         let x = node.x;
         let y = node.y;
         for x1 in x-20..=x+20 {
@@ -224,22 +224,14 @@ pub fn part2(contents: &String) -> String {
                     if manhattan > 20 {
                         continue;
                     }
-                    // let mut walls_crossed = 0;
-                    // if pi2 - pi1 - manhattan >= 50 {
-                    //     // calculate the least number of walls to cross to get from the start to the end
-                    //     walls_crossed = get_walls_crossed(&Node{x:x,y:y}, &Node{x:x1,y:y1});
-                    // }
-                    // if walls_crossed > 20 {
-                    //     continue;
-                    // }
-                    // if (pi2-pi1-manhattan) >= 50 {
-                    //     println!("Cheat at ({},{}) saves {} steps", x1, y1, pi2-pi1-manhattan);
-                    //     let cheat_saving = pi2-pi1-manhattan;
-                    //     let count = cheat_counts.entry(cheat_saving).or_insert(0);
-                    //     *count += 1;
-                    // }
-                    if pi2 - pi1 - manhattan > 100 {
-                        cheats.insert((x1,y1), pi2-pi1-2);
+                    if (pi2-pi1-manhattan) >= 100 {
+                        println!("Cheat at ({},{}) saves {} steps", x1, y1, pi2-pi1-manhattan);
+                        let cheat_saving = pi2-pi1-manhattan;
+                        let count = cheat_counts.entry(cheat_saving).or_insert(0);
+                        *count += 1;
+                    }
+                    if pi2 - pi1 - manhattan >= 100 {
+                        cheats.insert((x1,y1), pi2-pi1-manhattan);
                     }
                 }
             }
@@ -247,83 +239,17 @@ pub fn part2(contents: &String) -> String {
     }
 
     // print all the cheat counts
-    // for (k,v) in cheat_counts.iter() {
-    //     println!("There are {} cheats that save {} picoseconds.", v, k);
-    // }
+    let mut cc_sum = 0;
+    for (k,v) in cheat_counts.iter() {
+        println!("There are {} cheats that save {} picoseconds.", v, k);
+        if *k >= 100 {
+            cc_sum += *v;
+        }
+    }
+    println!("Total cheats >= 100: {}", cc_sum);
 
-    cheats.len().to_string()
+    cc_sum.to_string()
 }
-
-// fn get_walls_crossed(node1: &Node, node2: &Node) -> u64 {
-//     let mut walls_crossed = 0;
-//     let shortest_wall_path = advent::shortest_path(*node1, *node2, get_neighbors_big_cheat, get_cost_big_cheat, get_heuristic);
-//     // count how many walls are in the shortest_wall_path
-//     if shortest_wall_path.is_some() {
-//         let shortest_wall_path = shortest_wall_path.unwrap();
-//         for i in 0..shortest_wall_path.len()-1 {
-//             let node1 = &shortest_wall_path[i];
-//             let node2 = &shortest_wall_path[i+1];
-//             let cost = get_cost_big_cheat(node1, node2);
-//             if cost == 2 {
-//                 walls_crossed += 1;
-//             }
-//         }
-//     }
-//     walls_crossed
-// }
-
-// fn get_big_cheat_cost(node1: &Node, node2: &Node) -> u64 {
-//     let cheat_path = advent::shortest_path(*node1, *node2, get_neighbors_big_cheat, get_cost_big_cheat, get_heuristic);
-//     if cheat_path.is_none() {
-//         return 100;
-//     }
-//     let cheat_path = cheat_path.unwrap();
-//     let mut cost = 0;
-//     for i in 0..cheat_path.len()-1 {
-//         let node1 = &cheat_path[i];
-//         let node2 = &cheat_path[i+1];
-//         cost += get_cost_big_cheat(node1, node2);
-//     }
-//     cost
-// }
-
-// fn get_neighbors_big_cheat(node: &Node) -> Vec<Node> {
-//     // get the global map
-//     let m = MAP.lock().unwrap();
-//     let mut neighbors = Vec::new();
-//     let mut x = node.x+1;
-//     let mut y = node.y;
-//     if x < m.width-1 {
-//         neighbors.push(Node{x: x, y:y});
-//     }
-//     x = node.x-1;
-//     if x > 0 {
-//         neighbors.push(Node{x: x, y:y,});
-//     }
-//     x = node.x;
-//     y = node.y+1;
-//     if y < m.height-1 {
-//         neighbors.push(Node{x: x, y:y});
-//     }
-//     y = node.y-1;
-//     if y > 0 {
-//         neighbors.push(Node{x: x, y:y});
-//     }
-//     drop(m);
-//     neighbors
-// }
-
-// fn get_cost_big_cheat(_node1: &Node, node2: &Node) -> u64 {
-//     let m = MAP.lock().unwrap();
-//     let c = m.map.get(&(node2.x,node2.y)).unwrap_or(&'.');
-//     let c = *c;
-//     drop(m);
-//     if c == '#' {
-//         2
-//     } else {
-//         1
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
