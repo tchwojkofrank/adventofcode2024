@@ -1,7 +1,7 @@
 
 // use the advent package
 use advent;
-use std::{collections::{HashMap, HashSet}, sync::Mutex, time::Instant};
+use std::{collections::{HashMap, HashSet}, sync::Mutex, time::Instant, io::Write};
 
 fn main() {
     let args = advent::get_commandline_arguments();
@@ -39,7 +39,18 @@ pub fn part1(contents: &String) -> String {
     let end_pos = map.2;
     let start_node = Node { pos: start_pos, direction: 1 };
     let end_node = Node { pos: end_pos, direction: 4 };
-    let path = advent::shortest_path(start_node, end_node, get_neighbors, get_cost, heuristic);
+    // clear the screen
+    advent::clear();
+    advent::position(0,0);
+    // print the map
+    // set the color to white
+    print!("\x1b[37m");
+
+    for row in map.0 {
+        let s: String = row.iter().collect();
+        println!("{}", s);
+    }
+    let path = advent::shortest_path_with_callback(start_node, end_node, get_neighbors, get_cost, heuristic, Some(visit));
     if path.is_none() {
         return "No path found".to_string();
     }
@@ -51,9 +62,14 @@ fn calculate_path_cost(path: &Vec<Node>) -> u64 {
     let mut cost = 0;
     for i in 0..path.len()-1 {
         let new_cost = get_cost(&path[i], &path[i+1]);
+        // print the node in green
+        advent::position(path[i].pos.0 as u32, path[i].pos.1 as u32);
+        print!("\x1b[32m■\x1b[0m");
         // println!("Cost from {:?} to {:?} is {}", path[i], path[i+1], new_cost);
         cost += new_cost;
     }
+    // move the cursor to the bottom of the grid
+    advent::position(0, MAP.lock().unwrap().as_ref().unwrap().0.len() as u32);
     cost
 }
 // direction: 0 = up, 1 = right, 2 = down, 3 = left
@@ -124,6 +140,13 @@ lazy_static::lazy_static! {
     static ref MAP: Mutex<Option<(Vec<Vec<char>>,(i32,i32),(i32,i32))>> = Mutex::new(None);
 }
 
+fn visit(node: &Node) {
+    // print a red dot at the node's position using the advent package
+    advent::position(node.pos.0 as u32, node.pos.1 as u32);
+    print!("\x1b[31m•\x1b[0m");
+    std::io::stdout().flush().unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(1));
+}
 
 fn make_map(contents: &String) -> (Vec<Vec<char>>, (i32, i32), (i32, i32)) {
     let mut map = Vec::new();
@@ -201,10 +224,10 @@ fn walk_paths(paths: HashMap<Node,Vec<Node>>) -> HashSet<(i32,i32)> {
         }
     }
     // print the map
-    for row in result_map {
-        let s: String = row.iter().collect();
-        println!("{}", s);
-    }
+    // for row in result_map {
+    //     let s: String = row.iter().collect();
+    //     println!("{}", s);
+    // }
     visited
 }
 

@@ -79,6 +79,17 @@ where
     DistanceFn: Fn(&Node, &Node) -> u64,
     HeuristicFn: Fn(&Node, &Node) -> u64,
 {
+    shortest_path_with_callback(start, goal, get_neighbors, get_distance, get_heuristic, None::<fn(&Node)>)
+}
+
+pub fn shortest_path_with_callback<Node, NeighborFn, DistanceFn, HeuristicFn, CallbackFn>(start: Node, goal: Node, get_neighbors: NeighborFn, get_distance: DistanceFn, get_heuristic: HeuristicFn, callback: Option<CallbackFn>) -> Option<Vec<Node>>
+where
+    Node: std::cmp::Eq + std::hash::Hash + std::clone::Clone,
+    NeighborFn: Fn(&Node) -> Vec<Node>,
+    DistanceFn: Fn(&Node, &Node) -> u64,
+    HeuristicFn: Fn(&Node, &Node) -> u64,
+    CallbackFn: Fn(&Node),
+{
     // create a priority queue
     let mut queue = std::collections::BinaryHeap::new();
     // create a hash map to store the distance to each node
@@ -120,6 +131,9 @@ where
         }
         // insert the node into the visited set
         visited.insert(node.clone());
+        if let Some(callback) = &callback {
+            callback(&node);
+        }
         // for each neighbor of the node
         for neighbor
         in get_neighbors(&node) {
