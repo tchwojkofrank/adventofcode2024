@@ -25,62 +25,9 @@ fn main() {
     println!("Part 2:\n{}\n\tTook {:?}", result2, duration);
 }
 
-// 789
-// 456
-// 123
-//  0A
-
-//  ^A
-// <v>
-
-type Node = i32;
-
-fn number_pad_distance(_x: Node, _y: Node) -> i32 {
-    1
-}
-
-fn number_pad_neighbors(node: Node) -> Vec<Node> {
-    match node {
-        1 => vec![2, 4],
-        2 => vec![0, 1, 3, 5],
-        3 => vec![10, 2, 6],
-        4 => vec![1, 5, 7],
-        5 => vec![2, 4, 6, 8],
-        6 => vec![3, 5, 9],
-        7 => vec![4, 8],
-        8 => vec![5, 7, 9],
-        9 => vec![6, 8],
-        0 => vec![2,10],
-        10 => vec![0,3],
-        _ => vec![],
-    }
-}
-
-type Node2 = char;
-
-fn dir_pad_distance(_x: Node2, _y: Node2) -> i32 {
-    1
-}
-
-fn dir_pad_neighbors(node: Node2) -> Vec<Node2> {
-    match node {
-        '^' => vec!['A', 'v'],
-        'A' => vec!['^', '>'],
-        '<' => vec!['v'],
-        'v' => vec!['<', '^', '>'],
-        '>' => vec!['v', 'A'],
-        _ => vec![],
-    }
-}
-
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    let code = vec![0,2,9,10];
-    let all_code_paths = advent::all_paths(5, 5, 0, &code, &number_pad_neighbors, &number_pad_distance);
-    for path in all_code_paths {
-        
-    }
     1.to_string()
 }
 
