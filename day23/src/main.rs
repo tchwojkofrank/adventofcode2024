@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::{HashMap, HashSet}, time::Instant};
 
 // use the advent package
 use advent;
@@ -28,12 +28,140 @@ fn main() {
 // turn off warning for unused variables
 #[allow(unused_variables)]
 pub fn part1(contents: &String) -> String {
-    1.to_string()
+    let lines = contents.split("\n").collect::<Vec<&str>>();
+    let mut nodes: HashMap<&str,i32> = HashMap::new();
+    let mut edges: HashMap<&str,Vec<&str>> = HashMap::new();
+    for line in lines {
+        let parts = line.split("-").collect::<Vec<&str>>();
+        let from = parts[0];
+        let to = parts[1];
+        if !nodes.contains_key(from) {
+            nodes.insert(from, 0);
+        }
+        // check if the list of edges contains the from node
+        if !edges.contains_key(from) {
+            // create a new vector of strings and insert it into the edges hashmap
+            edges.insert(from, Vec::new());
+        }
+        // add the to node to the vector of strings
+        edges.get_mut(from).unwrap().push(to);
+        // check if the list of edges contains the to node
+        if !edges.contains_key(to) {
+            // create a new vector of strings and insert it into the edges hashmap
+            edges.insert(to, Vec::new());
+        }
+        // add the from node to the vector of strings
+        edges.get_mut(to).unwrap().push(from);
+    }
+    count_t_triangles(&edges).to_string()
+}
+
+fn count_t_triangles(edges: &HashMap<&str,Vec<&str>>) -> i32 {
+    let mut count = 0;
+    let mut visited: HashSet<(&str,&str,&str)> = HashSet::new();
+    for (from, to) in edges {
+        if from.starts_with("t") {
+            for node in to {
+                for node2 in edges.get(node).unwrap() {
+                    if to.contains(node2) {
+                        let mut v = vec![from, node, node2];
+                        v.sort();
+                        if !visited.contains(&(v[0],v[1],v[2])) {
+                            visited.insert((v[0],v[1],v[2]));
+                            count += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    count
 }
 
 #[allow(unused_variables)]
 pub fn part2(contents: &String) -> String {
-    2.to_string()
+    let lines = contents.split("\n").collect::<Vec<&str>>();
+    let mut nodes: HashMap<&str,i32> = HashMap::new();
+    let mut edges: HashMap<&str,Vec<&str>> = HashMap::new();
+    for line in lines {
+        let parts = line.split("-").collect::<Vec<&str>>();
+        let from = parts[0];
+        let to = parts[1];
+        if !nodes.contains_key(from) {
+            nodes.insert(from, 0);
+        }
+        // check if the list of edges contains the from node
+        if !edges.contains_key(from) {
+            // create a new vector of strings and insert it into the edges hashmap
+            edges.insert(from, Vec::new());
+        }
+        // add the to node to the vector of strings
+        edges.get_mut(from).unwrap().push(to);
+        // check if the list of edges contains the to node
+        if !edges.contains_key(to) {
+            // create a new vector of strings and insert it into the edges hashmap
+            edges.insert(to, Vec::new());
+        }
+        // add the from node to the vector of strings
+        edges.get_mut(to).unwrap().push(from);
+    }
+    let mut all_visited: HashSet<&str> = HashSet::new();
+    let mut biggest_network = (HashSet::new(), 0);
+    for (node, _) in &nodes {
+        if all_visited.contains(node) {
+            continue;
+        }
+        let visited = network(node, &edges);
+        if visited.len() > biggest_network.1 {
+            biggest_network = (visited.clone(), visited.len());
+        }
+        for v in visited {
+            all_visited.insert(v);
+        }
+    }
+    // get a Vector of all the nodes from the biggest network, sort them, and join them into a string separated by commas
+    let mut v = biggest_network.0.into_iter().collect::<Vec<&str>>();
+    v.sort();
+    let result = v.iter().enumerate().map(|(i, x)| {
+        if i == 0 {
+            x.to_string()
+        } else {
+            format!(",{}", x)
+        }
+    }).collect::<String>(); 
+
+    result.to_string()
+}
+
+fn network<'a>(start: &'a str, edges: &'a HashMap<&'a str, Vec<&'a str>>) -> HashSet<&'a str> {
+    let mut visited: HashSet<&str> = HashSet::new();
+    let mut clique: HashSet<&str> = HashSet::new();
+    let mut stack: Vec<&str> = Vec::new();
+    stack.push(start);
+    clique.insert(start);
+    while stack.len() > 0 {
+        let node = stack.pop().unwrap();
+        if !visited.contains(node) {
+            // check if the new node is a neighbor to every node in the clique
+            let mut in_clique = true;
+            let links = edges.get(node).unwrap();
+            for n in &clique {
+                if !links.contains(&n) {
+                    in_clique = false;
+                    break;
+                }
+            }
+            if in_clique {
+                clique.insert(node);
+            }
+            visited.insert(node);
+            for n in edges.get(node).unwrap() {
+                stack.push(n);
+            }
+        }
+    }
+    println!("{:?}", clique);
+    clique
 }
 
 #[cfg(test)]
