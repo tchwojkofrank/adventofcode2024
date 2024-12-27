@@ -166,87 +166,53 @@ pub fn part2(contents: &String) -> String {
             }
         }
     }
-    // get the list of probably correct gates
-    let mut right_bits = Vec::new();
-    while mask <= answer {
-        if (answer & mask) == (z_value & mask) {
-            // create the name of the z gate that sets the wrong bit. The name is "z" followed by the two digit bit number
-            let gate_name = format!("z{:02}", bit);
-            right_bits.push(gate_name);
-        }
-        mask = mask << 1;
-        bit += 1;
-    }
-    // get the list of gates that eventually set the wrong bits
-    let mut right_gates = HashSet::new();
-    // create a stack of the z gates, so that we can trace back to find all wires involved in gates that set the wrong bits
-    let mut stack = right_bits.clone();
-    while stack.len() > 0 {
-        let gate_name = stack.pop().unwrap();
-        for gate in &gates {
-            if gate.3 == gate_name {
-                right_gates.insert(gate);
-                stack.push(gate.0.to_string());
-                stack.push(gate.1.to_string());
-            }
-        }
-    }
-    // get the list of wrong gates that are not in the list of right gates
-    let mut wrong_gates2 = HashSet::new();
-    for gate in &wrong_gates {
-        let mut found = false;
-        for right_gate in &right_gates {
-            if gate.3 == right_gate.3 {
-                found = true;
-                break;
-            }
-        }
-        if !found {
-            wrong_gates2.insert(gate);
-        }
-    }
-    // print the count of wrong2 gates
-    println!("Wrong2 gates: {}", wrong_gates2.len());
+    // print the wrong gates
+    println!("Wrong gates: {}", wrong_gates.len());
+    // // get the list of probably correct gates
+    // let mut right_bits = Vec::new();
+    // while mask <= answer {
+    //     if (answer & mask) == (z_value & mask) {
+    //         // create the name of the z gate that sets the wrong bit. The name is "z" followed by the two digit bit number
+    //         let gate_name = format!("z{:02}", bit);
+    //         right_bits.push(gate_name);
+    //     }
+    //     mask = mask << 1;
+    //     bit += 1;
+    // }
+    // // get the list of gates that eventually set the wrong bits
+    // let mut right_gates = HashSet::new();
+    // // create a stack of the z gates, so that we can trace back to find all wires involved in gates that set the wrong bits
+    // let mut stack = right_bits.clone();
+    // while stack.len() > 0 {
+    //     let gate_name = stack.pop().unwrap();
+    //     for gate in &gates {
+    //         if gate.3 == gate_name {
+    //             right_gates.insert(gate);
+    //             stack.push(gate.0.to_string());
+    //             stack.push(gate.1.to_string());
+    //         }
+    //     }
+    // }
+    // // get the list of wrong gates that are not in the list of right gates
+    // let mut wrong_gates2 = HashSet::new();
+    // for gate in &wrong_gates {
+    //     let mut found = false;
+    //     for right_gate in &right_gates {
+    //         if gate.3 == right_gate.3 {
+    //             found = true;
+    //             break;
+    //         }
+    //     }
+    //     if !found {
+    //         wrong_gates2.insert(gate);
+    //     }
+    // }
+    // // print the count of wrong2 gates
+    // println!("Wrong2 gates: {}", wrong_gates2.len());
     // try every combination of four pairs of wrong__gates2
     // combos8 is an index into wrong_gates2
-    let combos8 = (0..wrong_gates2.len()).combinations(8);
-    // for each combo8, try every combination of 4 pairs of gates
-    for combo8 in combos8 {
-        // try every permutation of the 8 gates
-        let perms = combo8.iter().permutations(8);
-        for perm in perms {
-        // get a reference to the first gate
-        let gate0 = wrong_gates2.iter().nth(*perm[0]).unwrap().clone();
-        let gate1 = wrong_gates2.iter().nth(*perm[1]).unwrap().clone();
-        // find the original gates in the gates vector and swap their outputs
-        for gate in gates.iter_mut() {
-            if *gate == **gate0 {
-                gate.3 = gate1.3;
-            } else if *gate == **gate1 {
-                gate.3 = gate0.3;
-            }
-        }
-        // test if the swap results in the correct output
-        let mut wires2 = wires.clone();
-        for gate in &gates {
-            apply(&mut wires2, gate.0, gate.1, gate.2, gate.3);
-        }
-        let z_value2 = get_value(&wires2, "z".to_string());
-        if z_value2 == answer {
-            println!("Correct answer found");
-            break;
-        } else {
-            // undo the swap
-            for gate in gates.iter_mut() {
-                if *gate == **gate0 {
-                    gate.3 = gate0.3;
-                } else if *gate == **gate1 {
-                    gate.3 = gate1.3;
-                }
-            }
-        }
-    }
-}
+    // let initial_settings = sections[0].lines().collect::<Vec<&str>>();
+    // let mut wires = initialize_wires(initial_settings);
 
     2.to_string()
 }
