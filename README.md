@@ -18,3 +18,18 @@ The default input file is `files/test`, and the default expected answers for par
 
 ## The `advent` library
 This library has the basic conveniences for reading and splitting input. I'll add other things there as needed (such as point structures, vector math, data structure algorithms, etc.).
+
+# Results
+
+## Final tally:
+
+44 ⭐️
+* 2 days did not attempt (Day 21 and 25)
+* Day 21 didn’t know how to start
+* Day 25 didn’t really look at it.
+* 2 days only part 1
+* Day 17, due to a bug or my approach is off.
+* Day 24, didn’t get to it, but have an approach.
+
+After some peeking at other solutions, I figured out I was on the right track for Day 17, but was overthinking it, and had bugs.
+
